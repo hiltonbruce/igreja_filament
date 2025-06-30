@@ -44,7 +44,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
-            $table->softDeletes();
+            $table->softDeletesTz();
             $table->unique([DB::raw('lower(name)'), 'church_id'], 'unique_department_name');
         });
         DB::statement("COMMENT ON TABLE departments IS 'Finalidade: registrar departamentos da igreja

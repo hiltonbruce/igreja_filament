@@ -30,7 +30,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
-            $table->softDeletes();
+            $table->softDeletesTz();
         });
         DB::statement("COMMENT ON TABLE marriages IS 'Finalidade: registrar casamentos
             Responsável: Bruce

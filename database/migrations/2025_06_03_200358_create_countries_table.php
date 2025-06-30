@@ -24,7 +24,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
-            $table->softDeletes();
+            $table->softDeletesTz();
             $table->unique([DB::raw('lower(name)'), 'iso_code'], 'unique_country_name_iso');
         });
         DB::statement("COMMENT ON TABLE countries IS 'Finalidade: registrar países

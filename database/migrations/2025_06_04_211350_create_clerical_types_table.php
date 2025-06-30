@@ -22,7 +22,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('ID do tipo de cargo pai, se houver');
             $table->timestamps();
-            $table->softDeletes();
+            $table->softDeletesTz();
             $table->unique([DB::raw('lower(name)'), 'clerical_type_id'], 'unique_clerical_type_name');
             $table->foreignId('user_id')
                 ->constrained('users')

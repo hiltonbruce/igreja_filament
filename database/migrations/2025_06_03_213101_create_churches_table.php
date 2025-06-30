@@ -34,7 +34,7 @@ return new class extends Migration
                 ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
-            $table->softDeletes();
+            $table->softDeletesTz();
         });
     }
 
