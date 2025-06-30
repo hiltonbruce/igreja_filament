@@ -18,12 +18,16 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+<<<<<<< HEAD
             $table->string('role')->default('user'); // Default role for new users
             $table->string('profile_picture')->nullable(); // Optional profile picture field
             $table->string('locale')->default('en'); // Default locale for new users
 
             $table->timestamps();
             $table->softDeletes();
+=======
+            $table->timestampsTz();
+>>>>>>> 5fec00f (Tabelas Membros)
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
