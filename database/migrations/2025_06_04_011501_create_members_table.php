@@ -29,7 +29,7 @@ return new class extends Migration
             $table->boolean('matrimonial_status')->default(false)->comment('Estado civil do membro, true para casado(a) e false para solteiro(a)');
             $table->boolean('baptized_in_spirit')->default(false)->comment('Indica se o membro foi batizado no Espírito Santo, padrão é false');
             $table->date('baptized_in_spirit_date')->nullable()->comment('Data do batismo no Espírito Santo do membro');
-            $table->date('baptized')->default(false)->comment('Data do batismo em água do membro');
+            $table->date('baptized')->nullable()->comment('Data do batismo em água do membro');
             $table->foreignId('city_id')->nullable()->constrained('cities')->comment('Cidade do membro');
             $table->foreignId('state_id')->nullable()->constrained('states')->comment('Estado do membro');
             $table->foreignId('country_id')->constrained('countries')->default(55)->comment('País do membro, padrão é Brasil');
@@ -51,9 +51,9 @@ return new class extends Migration
             $table->softDeletesTz();
         });
 
-        DB::statement("COMMENT ON TABLE members IS 'Finalidade: registrar membros da igreja
-            Responsável: Bruce
-            Versão: 1.0 - 03/06/2025';");
+        // DB::statement("COMMENT ON TABLE members IS 'Finalidade: registrar membros da igreja
+        //     Responsável: Bruce
+        //     Versão: 1.0 - 03/06/2025';");
     }
 
     /**

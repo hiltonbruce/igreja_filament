@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('spouse_name')->nullable()->comment('Nome do cônjuge do membro, se aplicável');
             $table->string('marriage_certificate')->nullable()->comment('Registro da certidão de casamento do membro, número, livro e folhas');
             $table->string('marriage_certificate_document')->nullable()->comment('Documento da certidão de casamento do membro, armazenado como URL ou caminho relativo');
-            $table->date('marriage_date')->comment('Data do casamento');
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade')
@@ -32,9 +31,9 @@ return new class extends Migration
             $table->timestampsTz();
             $table->softDeletesTz();
         });
-        DB::statement("COMMENT ON TABLE marriages IS 'Finalidade: registrar casamentos
-            Responsável: Bruce
-            Versão: 1.0 - 04/06/2025';");
+        // DB::statement("COMMENT ON TABLE marriages IS 'Finalidade: registrar casamentos
+        //     Responsável: Bruce
+        //     Versão: 1.0 - 04/06/2025';");
     }
 
     /**

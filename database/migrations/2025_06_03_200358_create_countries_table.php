@@ -25,11 +25,11 @@ return new class extends Migration
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
             $table->softDeletesTz();
-            $table->unique([DB::raw('lower(name)'), 'iso_code'], 'unique_country_name_iso');
+            $table->unique(['name', 'iso_code'], 'unique_country_name_iso');
         });
-        DB::statement("COMMENT ON TABLE countries IS 'Finalidade: registrar países
-             Responsável: Bruce
-             Versão: 1.0 - 03/06/2025';");
+        // DB::statement("COMMENT ON TABLE countries IS 'Finalidade: registrar países
+        //      Responsável: Bruce
+        //      Versão: 1.0 - 03/06/2025';");
     }
 
     /**

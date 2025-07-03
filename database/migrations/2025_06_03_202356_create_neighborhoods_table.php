@@ -26,9 +26,9 @@ return new class extends Migration
             $table->timestampsTz();
             $table->softDeletesTz();
         });
-        DB::statement("COMMENT ON TABLE neighborhoods IS 'Finalidade: registrar bairros
-             Responsável: Bruce
-             Versão: 1.0 - 03/06/2025';");
+        // DB::statement("COMMENT ON TABLE neighborhoods IS 'Finalidade: registrar bairros
+        //      Responsável: Bruce
+        //      Versão: 1.0 - 03/06/2025';");
     }
 
     /**

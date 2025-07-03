@@ -32,9 +32,9 @@ return new class extends Migration
             $table->timestampsTz();
             $table->softDeletesTz();
         });
-        DB::statement("COMMENT ON TABLE clericals IS 'Finalidade: registrar os cargos na igreja
-            Responsável: Bruce
-            Versão: 1.0 - 04/06/2025';");
+        // DB::statement("COMMENT ON TABLE clericals IS 'Finalidade: registrar os cargos na igreja
+        //     Responsável: Bruce
+        //     Versão: 1.0 - 04/06/2025';");
     }
 
     /**

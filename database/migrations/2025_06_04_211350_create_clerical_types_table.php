@@ -23,15 +23,15 @@ return new class extends Migration
                 ->comment('ID do tipo de cargo pai, se houver');
             $table->timestamps();
             $table->softDeletesTz();
-            $table->unique([DB::raw('lower(name)'), 'clerical_type_id'], 'unique_clerical_type_name');
+            $table->unique(['name', 'clerical_type_id'], 'unique_clerical_type_name');
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
         });
-        DB::statement("COMMENT ON TABLE clerical_types IS 'Finalidade: registrar tipos de cargos
-             Responsável: Bruce
-             Versão: 1.0 - 04/06/2025';");
+        // DB::statement("COMMENT ON TABLE clerical_types IS 'Finalidade: registrar tipos de cargos
+        //      Responsável: Bruce
+        //      Versão: 1.0 - 04/06/2025';");
     }
 
     /**

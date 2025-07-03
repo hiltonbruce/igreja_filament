@@ -25,9 +25,8 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
-            ->login() // Isso define que o Filament deve usar sua própria página de login
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')

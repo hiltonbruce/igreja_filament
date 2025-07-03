@@ -28,9 +28,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletesTz();
         });
-        DB::statement("COMMENT ON TABLE complementaries IS 'Finalidade: registrar os complementares do membro
-            Responsável: Bruce
-            Versão: 1.0 - 04/06/2025';");
+        // DB::statement("COMMENT ON TABLE complementaries IS 'Finalidade: registrar os complementares do membro
+        //     Responsável: Bruce
+        //     Versão: 1.0 - 04/06/2025';");
     }
 
     /**

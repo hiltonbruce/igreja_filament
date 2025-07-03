@@ -38,18 +38,14 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade')
-                ->comment('ID do usuário responsável pelo cadastro do departamento');
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->onDelete('cascade')
                 ->comment('ID do usuário responsável pelo cadastro');
             $table->timestampsTz();
             $table->softDeletesTz();
-            $table->unique([DB::raw('lower(name)'), 'church_id'], 'unique_department_name');
+            $table->unique(['name', 'church_id'], 'unique_department_name');
         });
-        DB::statement("COMMENT ON TABLE departments IS 'Finalidade: registrar departamentos da igreja
-            Responsável: Bruce
-            Versão: 1.0 - 03/06/2025';");
+        // DB::statement("COMMENT ON TABLE departments IS 'Finalidade: registrar departamentos da igreja
+        //     Responsável: Bruce
+        //     Versão: 1.0 - 03/06/2025';");
     }
 
     /**
