@@ -6,8 +6,10 @@ use App\Filament\Admin\Resources\MemberResource\Pages;
 use App\Filament\Admin\Resources\MemberResource\RelationManagers;
 use App\Models\Member;
 use Filament\Forms;
+use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,7 +25,33 @@ class MemberResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Wizard::make([
+                        Wizard\Step::make('Dados Pessoais')
+                            ->schema([
+                                // ...
+                            ]),
+                        Wizard\Step::make('Eclesiástico')
+                            ->schema([
+                                // ...
+                            ]),
+                        Wizard\Step::make('Familiar')
+                            ->schema([
+                                // ...
+                            ]),
+                        Wizard\Step::make('Profissional')
+                            ->schema([
+                                // ...
+                            ]),
+                        Wizard\Step::make('Financeiro')
+                            ->schema([
+                                // ...
+                            ]),
+                        Wizard\Step::make('Observações')
+                            ->schema([
+                                // ...
+                            ])
+
+                    ])->columnSpanFull(),
             ]);
     }
 
@@ -37,7 +65,8 @@ class MemberResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->modalWidth(MaxWidth::Full),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -57,7 +86,7 @@ class MemberResource extends Resource
     {
         return [
             'index' => Pages\ListMembers::route('/'),
-            'create' => Pages\CreateMember::route('/create'),
+            // 'create' => Pages\CreateMember::route('/create'),
             'edit' => Pages\EditMember::route('/{record}/edit'),
         ];
     }

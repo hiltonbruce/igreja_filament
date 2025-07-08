@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\MemberResource\Pages;
 use App\Filament\Admin\Resources\MemberResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\MaxWidth;
 
 class ListMembers extends ListRecords
 {
@@ -13,7 +14,8 @@ class ListMembers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->modalWidth(MaxWidth::SixExtraLarge),
         ];
     }
 }
