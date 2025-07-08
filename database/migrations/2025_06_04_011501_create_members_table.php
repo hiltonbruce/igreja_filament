@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('last_name')->comment('Sobrenome do membro');
             $table->date('birth_date')->nullable()->comment('Data de nascimento do membro');
             $table->foreignId('city_of_birth_id')->nullable()->constrained('cities')->comment('Cidade de nascimento do membro');
+            $table->foreignId('state_of_birth_id')->nullable()->constrained('states')->comment('Estado de nascimento do membro');
+            $table->foreignId('country_of_birth_id')->nullable()->constrained('countries')->comment('País de nascimento do membro');
             $table->boolean('sex')->default(true)->comment('Sexo do membro, true para masculino e false para feminino');
             $table->boolean('donor')->default(false)->comment('Indica se o membro é doador de órgãos, padrão é false');
             $table->string('blood_type')->default('O+')->comment('Tipo sanguíneo do membro, padrão é O+');

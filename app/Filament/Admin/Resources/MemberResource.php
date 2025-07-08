@@ -28,8 +28,45 @@ class MemberResource extends Resource
                 Wizard::make([
                         Wizard\Step::make('Dados Pessoais')
                             ->schema([
-                                // ...
-                            ]),
+                                Forms\Components\TextInput::make('first_name')
+                                    ->label('Nome')
+                                    ->required(),
+                                Forms\Components\TextInput::make('last_name')
+                                    ->label('Sobrenome')
+                                    ->columnSpan(2)
+                                    ->required(),
+                                Forms\Components\DatePicker::make('birth_date')
+                                    ->label('Data de Nascimento')
+                                    ->required(),
+                                Forms\Components\Radio::make('brazilian_born')
+                                    ->label('Brasileiro')
+                                    ->options([
+                                        'true' => 'Sim',
+                                        'false' => 'Não',
+                                    ])
+                                    ->inline()
+                                    ->inlineLabel(false)
+                                    ->required()
+                                    ->live(),
+                                Forms\Components\TextInput::make('country_of_birth_id')
+                                    ->label('País de Nascimento')
+                                    ->required()
+                                    ->visible(fn (Forms\Get $get) => $get('brazilian_born') === 'false'),
+                                Forms\Components\TextInput::make('state_of_birth_id')
+                                    ->label('Estado de Nascimento')
+                                    ->required(),
+                                Forms\Components\TextInput::make('city_of_birth_id')
+                                    ->label('Cidade de Nascimento')
+                                    ->required(),
+                                Forms\Components\TextInput::make('email')
+                                    ->label('Email')
+                                    ->required()
+                                    ->email(),
+                                Forms\Components\TextInput::make('phone')
+                                    ->label('Telefone')
+                                    ->required(),
+                            ])
+                            ->columns(3),
                         Wizard\Step::make('Eclesiástico')
                             ->schema([
                                 // ...
