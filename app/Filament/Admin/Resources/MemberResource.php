@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class MemberResource extends Resource
 {
     protected static ?string $model = Member::class;
+    protected static ?string $modelLabel = 'Membros';
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
@@ -26,64 +27,65 @@ class MemberResource extends Resource
         return $form
             ->schema([
                 Wizard::make([
-                        Wizard\Step::make('Dados Pessoais')
+                        Wizard\Step::make(__('custom.Personal Data'))
                             ->schema([
                                 Forms\Components\TextInput::make('first_name')
-                                    ->label('Nome')
+                                    ->label(__('custom.First Name'))
                                     ->required(),
                                 Forms\Components\TextInput::make('last_name')
-                                    ->label('Sobrenome')
+                                    ->label(__('custom.Last Name'))
                                     ->columnSpan(2)
                                     ->required(),
                                 Forms\Components\DatePicker::make('birth_date')
-                                    ->label('Data de Nascimento')
+                                    ->label(__('custom.Birth Date'))
                                     ->required(),
                                 Forms\Components\Radio::make('brazilian_born')
-                                    ->label('Brasileiro')
+                                    ->label(__('custom.Brazilian'))
                                     ->options([
-                                        'true' => 'Sim',
-                                        'false' => 'Não',
+                                        'true' => __('custom.Yes'),
+                                        'false' => __('custom.No'),
                                     ])
+                                    ->default('true')
                                     ->inline()
                                     ->inlineLabel(false)
                                     ->required()
                                     ->live(),
                                 Forms\Components\TextInput::make('country_of_birth_id')
-                                    ->label('País de Nascimento')
+                                    ->label(__('custom.Country of Birth'))
                                     ->required()
                                     ->visible(fn (Forms\Get $get) => $get('brazilian_born') === 'false'),
                                 Forms\Components\TextInput::make('state_of_birth_id')
-                                    ->label('Estado de Nascimento')
+                                    ->label(__('custom.State of Birth'))
                                     ->required(),
                                 Forms\Components\TextInput::make('city_of_birth_id')
-                                    ->label('Cidade de Nascimento')
+                                    ->label(__('custom.City of Birth'))
                                     ->required(),
                                 Forms\Components\TextInput::make('email')
-                                    ->label('Email')
+                                    ->label(__('custom.Email'))
                                     ->required()
                                     ->email(),
                                 Forms\Components\TextInput::make('phone')
-                                    ->label('Telefone')
+                                    ->label(__('custom.Phone'))
                                     ->required(),
                             ])
                             ->columns(3),
-                        Wizard\Step::make('Eclesiástico')
+                        Wizard\Step::make(__('custom.Ecclesiastical'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make('Familiar')
+                        Wizard\Step::make(__('custom.Family'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make('Profissional')
+                        Wizard\Step::make(__('custom.Professional'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make('Financeiro')
+                        Wizard\Step::make(__('custom.Financial'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make('Observações')
+                        Wizard\Step::make(__('custom.Observations'))
                             ->schema([
                                 // ...
                             ])
