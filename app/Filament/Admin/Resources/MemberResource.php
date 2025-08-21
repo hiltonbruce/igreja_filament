@@ -29,15 +29,29 @@ class MemberResource extends Resource
                 Wizard::make([
                         Wizard\Step::make(__('custom.Personal Data'))
                             ->schema([
-                                Forms\Components\TextInput::make('first_name')
-                                    ->label(__('custom.First Name'))
+                                Forms\Components\TextInput::make('name')
+                                    ->label(__('custom.Name'))
+                                    ->columnSpanFull()
                                     ->required(),
-                                Forms\Components\TextInput::make('last_name')
-                                    ->label(__('custom.Last Name'))
-                                    ->columnSpan(2)
+                                Forms\Components\TextInput::make('father_name')
+                                    ->label(__('custom.Father Name'))
+                                    ->columnSpanFull()
+                                    ->required(),
+                                Forms\Components\TextInput::make('mother_name')
+                                    ->label(__('custom.Mother Name'))
+                                    ->columnSpanFull()
                                     ->required(),
                                 Forms\Components\DatePicker::make('birth_date')
                                     ->label(__('custom.Birth Date'))
+                                    ->required(),
+                                Forms\Components\Radio::make('sex')
+                                    ->label(__('custom.Sex'))
+                                    ->inline()
+                                    ->inlineLabel(false)
+                                    ->options([
+                                        'male' => __('custom.Male'),
+                                        'female' => __('custom.Female'),
+                                    ])
                                     ->required(),
                                 Forms\Components\Radio::make('brazilian_born')
                                     ->label(__('custom.Brazilian'))

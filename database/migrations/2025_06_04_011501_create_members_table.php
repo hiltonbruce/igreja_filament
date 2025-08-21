@@ -14,8 +14,7 @@ return new class extends Migration
     {
         Schema::create('members', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name')->comment('Primeiro nome do membro');
-            $table->string('last_name')->comment('Sobrenome do membro');
+            $table->string('name')->comment('Nome do membro');
             $table->date('birth_date')->nullable()->comment('Data de nascimento do membro');
             $table->foreignId('city_of_birth_id')->nullable()->constrained('cities')->comment('Cidade de nascimento do membro');
             $table->foreignId('state_of_birth_id')->nullable()->constrained('states')->comment('Estado de nascimento do membro');

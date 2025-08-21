@@ -2,8 +2,12 @@
 // resources/lang/pt-BR/custom.php
 return [
     'Personal Data' => 'Datos personales',
-    'First Name' => 'Nombre',
-    'Last Name' => 'Apellido',
+    'Name' => 'Nombre',
+    'Father Name' => 'Nombre del padre',
+    'Mother Name' => 'Nombre de la madre',
+    'Sex' => 'Sexo',
+    'Male' => 'Masculino',
+    'Female' => 'Femenino',
     'Birth Date' => 'Fecha de nacimiento',
     'Brazilian' => 'Brasileño',
     'Yes' => 'Sí',
