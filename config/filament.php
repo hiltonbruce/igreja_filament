@@ -41,7 +41,8 @@ return [
     |
     */
 
-    'default_filesystem_disk' => env('FILAMENT_FILESYSTEM_DISK', 'public'),
+    // 'default_filesystem_disk' => env('FILAMENT_FILESYSTEM_DISK', 'public'), // Versão 3.x
+    'default_filesystem_disk' => env('FILESYSTEM_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------

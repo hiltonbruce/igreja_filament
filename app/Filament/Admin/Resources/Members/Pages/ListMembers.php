@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Filament\Admin\Resources\MemberResource\Pages;
+namespace App\Filament\Admin\Resources\Members\Pages;
 
-use App\Filament\Admin\Resources\MemberResource;
+use Filament\Actions\CreateAction;
+use Filament\Support\Enums\Width;
+use App\Filament\Admin\Resources\Members\MemberResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Support\Enums\MaxWidth;
 
 class ListMembers extends ListRecords
 {
@@ -14,8 +15,8 @@ class ListMembers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
-                ->modalWidth(MaxWidth::SixExtraLarge),
+            CreateAction::make()
+                ->modalWidth(Width::SixExtraLarge),
         ];
     }
 }

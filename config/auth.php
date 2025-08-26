@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -82,7 +84,7 @@ return [
     'providers' => [
         'filament' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class, // Ou seu modelo customizado
+            'model' => User::class, // Ou seu modelo customizado
         ],
     ],
 

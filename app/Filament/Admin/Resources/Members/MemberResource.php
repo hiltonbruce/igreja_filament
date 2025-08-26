@@ -1,15 +1,25 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Members;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Radio;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Actions\EditAction;
+use Filament\Support\Enums\Width;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Admin\Resources\Members\Pages\ListMembers;
+use App\Filament\Admin\Resources\Members\Pages\EditMember;
 use App\Filament\Admin\Resources\MemberResource\Pages;
 use App\Filament\Admin\Resources\MemberResource\RelationManagers;
 use App\Models\Member;
 use Filament\Forms;
-use Filament\Forms\Components\Wizard;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,31 +30,31 @@ class MemberResource extends Resource
     protected static ?string $model = Member::class;
     protected static ?string $modelLabel = 'Membros';
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Wizard::make([
-                        Wizard\Step::make(__('custom.Personal Data'))
+                        Step::make(__('custom.Personal Data'))
                             ->schema([
-                                Forms\Components\TextInput::make('name')
+                                TextInput::make('name')
                                     ->label(__('custom.Name'))
                                     ->columnSpanFull()
                                     ->required(),
-                                Forms\Components\TextInput::make('father_name')
+                                TextInput::make('father_name')
                                     ->label(__('custom.Father Name'))
                                     ->columnSpanFull()
                                     ->required(),
-                                Forms\Components\TextInput::make('mother_name')
+                                TextInput::make('mother_name')
                                     ->label(__('custom.Mother Name'))
                                     ->columnSpanFull()
                                     ->required(),
-                                Forms\Components\DatePicker::make('birth_date')
+                                DatePicker::make('birth_date')
                                     ->label(__('custom.Birth Date'))
                                     ->required(),
-                                Forms\Components\Radio::make('sex')
+                                Radio::make('sex')
                                     ->label(__('custom.Sex'))
                                     ->inline()
                                     ->inlineLabel(false)
@@ -53,7 +63,7 @@ class MemberResource extends Resource
                                         'female' => __('custom.Female'),
                                     ])
                                     ->required(),
-                                Forms\Components\Radio::make('brazilian_born')
+                                Radio::make('brazilian_born')
                                     ->label(__('custom.Brazilian'))
                                     ->options([
                                         'true' => __('custom.Yes'),
@@ -64,42 +74,42 @@ class MemberResource extends Resource
                                     ->inlineLabel(false)
                                     ->required()
                                     ->live(),
-                                Forms\Components\TextInput::make('country_of_birth_id')
+                                TextInput::make('country_of_birth_id')
                                     ->label(__('custom.Country of Birth'))
                                     ->required()
-                                    ->visible(fn (Forms\Get $get) => $get('brazilian_born') === 'false'),
-                                Forms\Components\TextInput::make('state_of_birth_id')
+                                    ->visible(fn (Get $get) => $get('brazilian_born') === 'false'),
+                                TextInput::make('state_of_birth_id')
                                     ->label(__('custom.State of Birth'))
                                     ->required(),
-                                Forms\Components\TextInput::make('city_of_birth_id')
+                                TextInput::make('city_of_birth_id')
                                     ->label(__('custom.City of Birth'))
                                     ->required(),
-                                Forms\Components\TextInput::make('email')
+                                TextInput::make('email')
                                     ->label(__('custom.Email'))
                                     ->required()
                                     ->email(),
-                                Forms\Components\TextInput::make('phone')
+                                TextInput::make('phone')
                                     ->label(__('custom.Phone'))
                                     ->required(),
                             ])
                             ->columns(3),
-                        Wizard\Step::make(__('custom.Ecclesiastical'))
+                        Step::make(__('custom.Ecclesiastical'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make(__('custom.Family'))
+                        Step::make(__('custom.Family'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make(__('custom.Professional'))
+                        Step::make(__('custom.Professional'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make(__('custom.Financial'))
+                        Step::make(__('custom.Financial'))
                             ->schema([
                                 // ...
                             ]),
-                        Wizard\Step::make(__('custom.Observations'))
+                        Step::make(__('custom.Observations'))
                             ->schema([
                                 // ...
                             ])
@@ -117,13 +127,13 @@ class MemberResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
-                    ->modalWidth(MaxWidth::Full),
+            ->recordActions([
+                EditAction::make()
+                    ->modalWidth(Width::Full),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -138,9 +148,9 @@ class MemberResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMembers::route('/'),
+            'index' => ListMembers::route('/'),
             // 'create' => Pages\CreateMember::route('/create'),
-            'edit' => Pages\EditMember::route('/{record}/edit'),
+            'edit' => EditMember::route('/{record}/edit'),
         ];
     }
 }
