@@ -16,6 +16,7 @@ class ListMembers extends ListRecords
     {
         return [
             CreateAction::make()
+                ->label(__('custom.Register') . ' ' . __('custom.Member'))
                 ->modalWidth(Width::SixExtraLarge),
         ];
     }
