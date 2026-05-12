@@ -24,3 +24,8 @@ Homestead.yaml
 npm-debug.log
 Thumbs.db
 yarn-error.log
+
+# Local IDE / MCP (credenciais e paths da máquina)
+/.cursor/mcp.json
+/.mcp.json
+/boost.json

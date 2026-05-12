@@ -1,4 +1,5 @@
 <?php
+
 // resources/lang/pt-BR/custom.php
 return [
     'Personal Data' => 'Datos personales',
@@ -46,6 +47,8 @@ return [
     // Countries
     'Country' => 'País',
     'Countries' => 'Países',
+    // States
+    'States' => 'Estados',
     // Members
     'Member' => 'Miembro',
     'Members' => 'Miembros',

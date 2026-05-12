@@ -1,94 +1,39 @@
-# Igreja Filament - AI Coding Assistant Instructions
+# Igreja Filament - AI Instructions (Short)
 
-## Project Overview
-This is a **church management system** built with **Laravel + Filament v3**, designed for Brazilian evangelical churches. The system manages member registration, ecclesiastical records, letters (recommendation/transfer), and administrative processes. The application is bilingual (Portuguese/English) with Portuguese as the primary language.
+## Objetivo
+Projeto de gestão eclesiástica com Laravel + Filament. Priorize consistência, clareza e segurança de dados.
 
-## Architecture & Core Patterns
+## Stack atual
+- PHP 8.4
+- Laravel 12
+- Filament 5
+- Livewire 4
+- Tailwind 4
 
-### Database Design
-- **Hierarchical geographic structure**: `countries` → `states` → `cities` → `neighborhoods`
-- **Member-centric design**: All features revolve around the `members` table with extensive relationships
-- **Soft deletes enabled**: Use `softDeletesTz()` for data integrity
-- **Foreign key constraints**: Strict referential integrity with `constrained()` and proper `onDelete` cascades
-- **Brazilian-specific fields**: CPF validation, blood types, spiritual status tracking
+## Diretrizes práticas
+- Siga os padrões já existentes no código.
+- Use `__('custom.*')` para textos de UI.
+- Prefira Eloquent/relacionamentos; evite SQL bruto.
+- Use Form Requests para validação.
+- Não mude dependências sem aprovação.
 
-### Filament Resource Pattern
-```php
-// Standard Filament Resource structure in app/Filament/Admin/Resources/
-class MemberResource extends Resource {
-    // Use Wizard components for complex multi-step forms
-    Wizard::make([
-        Wizard\Step::make(__('custom.Personal Data'))
-            ->schema([...])
-            ->columns(3),
-    ])
-    
-    // Always use MaxWidth::Full for complex forms
-    Tables\Actions\EditAction::make()
-        ->modalWidth(MaxWidth::Full)
-}
-```
+## Filament
+- Gere recursos/componentes com comandos Artisan do Filament.
+- Mantenha a estrutura em `app/Filament/Admin/Resources/`.
+- Para recursos complexos, reutilize padrão com `Wizard`, `->live()` e layout em colunas.
 
-### Internationalization System
-- **Custom translation keys**: Use `__('custom.Key')` pattern, not Laravel defaults
-- **Translation files**: `lang/pt_BR/custom.php` and `lang/es/custom.php`
-- **Consistent naming**: All form labels and UI text must use translation helpers
+## Fluxo recomendado
+1. Consultar docs com `search-docs`.
+2. Criar estrutura com `php artisan make:* --no-interaction`.
+3. Implementar seguindo padrões locais.
+4. Validar com testes.
+5. Rodar `vendor/bin/pint --dirty`.
 
-### Form Interaction Patterns
-- **Conditional visibility**: Use `->live()` + `->visible(fn (Forms\Get $get) => $get('field') === 'value')`
-- **Brazilian context**: `brazilian_born` field controls visibility of `country_of_birth_id`
-- **Required field logic**: Fields become required/optional based on user selections
-
-## Development Workflows
-
-### Adding New Resources
-1. Create migration with detailed comments explaining field purposes
-2. Create Model with proper relationships and constraints
-3. Create Filament Resource with Wizard for complex forms
-4. Add translation keys to `lang/pt_BR/custom.php` and `lang/es/custom.php`
-5. Use `->columnSpanFull()` for full-width fields, `->columns(3)` for step layout
-
-### Database Migrations
-```php
-// Always include detailed comments
-$table->string('document')->unique()->comment('Documento do membro, como CPF ou RG');
-$table->boolean('spiritual_situation')->default(true)->comment('Situação espiritual do membro - false para disciplinado');
-
-// Use proper foreign key constraints
-$table->foreignId('country_id')->constrained('countries')->default(55)->comment('País do membro, padrão é Brasil');
-```
-
-### Common Commands
-```bash
-php artisan make:filament-resource ModelName --generate
-php artisan migrate
-php artisan make:model ModelName -m
-```
-
-## Key Dependencies & Integrations
-- **Filament v3.3**: Main admin panel framework
-- **laravel-lang/common**: Provides additional language packs
-- **Brazilian locale support**: Default timezone and currency formatting
-
-## Critical Business Rules
-1. **CPF uniqueness**: Only one member per CPF document
-2. **Roll number restriction**: Cannot use sequence "666" in member rolls
-3. **Spiritual status tracking**: Members can be "disciplined" (spiritual_situation = false)
-4. **Family relationships**: Members can reference other members as parents
-5. **Church hierarchy**: Members belong to churches, which have departments and neighborhoods
-
-## File Structure Conventions
-- Models: Simple Eloquent models in `app/Models/`
-- Resources: Filament admin resources in `app/Filament/Admin/Resources/`
-- Migrations: Detailed with Portuguese comments explaining business context
-- Translations: Custom keys in `lang/{locale}/custom.php`
-
-## Forms Best Practices
-- Use `Wizard` components for multi-step member registration
-- Apply `->live()` for reactive form fields
-- Set proper column layouts: `->columns(3)` for main content, `->columnSpanFull()` for wide fields
-- Always include proper validation and required field logic
-- Use `MaxWidth::Full` for complex edit modals
+## Regras de negócio que não podem quebrar
+- CPF único por membro.
+- Restrição de sequência `666` em numeração de rol.
+- Situação espiritual deve continuar rastreável.
+- Relações geográficas e familiares devem manter integridade referencial.
 
 ===
 
@@ -102,12 +47,12 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 ## Foundational Context
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.4.11
-- filament/filament (FILAMENT) - v4
+- php - 8.4.21
+- filament/filament (FILAMENT) - v5
 - laravel/framework (LARAVEL) - v12
 - laravel/pint (PINT) - v1
 - laravel/prompts (PROMPTS) - v0
-- livewire/livewire (LIVEWIRE) - v3
+- livewire/livewire (LIVEWIRE) - v4
 - laravel/sail (SAIL) - v1
 - rector/rector (RECTOR) - v2
 - tailwindcss (TAILWINDCSS) - v4
@@ -287,27 +232,6 @@ Forms\Components\Select::make('user_id')
 </code-snippet>
 
 
-=== filament/v4 rules ===
-
-## Filament 4
-
-### Important Version 4 Changes
-- File visibility is now `private` by default.
-- The `deferFilters` method from Filament v3 is now the default behavior in Filament v4, so users must click a button before the filters are applied to the table. To disable this behavior, you can use the `deferFilters(false)` method.
-- The `Grid`, `Section`, and `Fieldset` layout components no longer span all columns by default.
-- The `all` pagination page method is not available for tables by default.
-- All action classes extend `Filament\Actions\Action`. No action classes exist in `Filament\Tables\Actions`.
-- The `Form` & `Infolist` layout components have been moved to `Filament\Schemas\Components`, for example `Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.
-- A new `Repeater` component for Forms has been added.
-- Icons now use the `Filament\Support\Icons\Heroicon` Enum by default. Other options are available and documented.
-
-### Organize Component Classes Structure
-- Schema components: `Schemas/Components/`
-- Table columns: `Tables/Columns/`
-- Table filters: `Tables/Filters/`
-- Actions: `Actions/`
-
-
 === laravel/core rules ===
 
 ## Do Things the Laravel Way
@@ -429,42 +353,6 @@ Forms\Components\Select::make('user_id')
         $this->get('/posts/create')
         ->assertSeeLivewire(CreatePost::class);
     </code-snippet>
-
-
-=== livewire/v3 rules ===
-
-## Livewire 3
-
-### Key Changes From Livewire 2
-- These things changed in Livewire 2, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
-    - Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
-    - Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
-    - Use `$this->dispatch()` to dispatch events (not `emit` or `dispatchBrowserEvent`).
-    - Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
-
-### New Directives
-- `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use. Use the documentation to find usage examples.
-
-### Alpine
-- Alpine is now included with Livewire, don't manually include Alpine.js.
-- Plugins included with Alpine: persist, intersect, collapse, and focus.
-
-### Lifecycle Hooks
-- You can listen for `livewire:init` to hook into Livewire initialization, and `fail.status === 419` for the page expiring:
-
-<code-snippet name="livewire:load example" lang="js">
-document.addEventListener('livewire:init', function () {
-    Livewire.hook('request', ({ fail }) => {
-        if (fail && fail.status === 419) {
-            alert('Your session expired');
-        }
-    });
-
-    Livewire.hook('message.failed', (message, component) => {
-        console.error(message);
-    });
-});
-</code-snippet>
 
 
 === tailwindcss/core rules ===
