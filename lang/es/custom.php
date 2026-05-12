@@ -52,6 +52,10 @@ return [
     // Members
     'Member' => 'Miembro',
     'Members' => 'Miembros',
+    'Photo history' => 'Historial de fotos',
+    'File path' => 'Ruta del archivo',
+    'Replaced by' => 'Reemplazado por',
+    'Replaced at' => 'Reemplazado el',
     // Actions
     'Create' => 'Registrar',
     'Register' => 'Registrar',

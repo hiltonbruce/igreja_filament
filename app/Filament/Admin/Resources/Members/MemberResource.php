@@ -2,38 +2,33 @@
 
 namespace App\Filament\Admin\Resources\Members;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Wizard;
-use Filament\Schemas\Components\Wizard\Step;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\FileUpload;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Actions\EditAction;
-use Filament\Support\Enums\Width;
+use App\Filament\Admin\Resources\Members\Pages\EditMember;
+use App\Filament\Admin\Resources\Members\Pages\ListMembers;
+use App\Filament\Admin\Resources\Members\RelationManagers\MemberPhotosRelationManager;
+use App\Models\Member;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\Members\Pages\ListMembers;
-use App\Filament\Admin\Resources\Members\Pages\EditMember;
-use App\Filament\Admin\Resources\MemberResource\Pages;
-use App\Filament\Admin\Resources\MemberResource\RelationManagers;
-use App\Models\Member;
-use Filament\Forms;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class MemberResource extends Resource
 {
     protected static ?string $model = Member::class;
-    
+
     protected static ?string $modelLabel = null;
 
     public static function getModelLabel(): string
@@ -51,7 +46,7 @@ class MemberResource extends Resource
         return __('custom.Members');
     }
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     public static function form(Schema $schema): Schema
     {
@@ -96,14 +91,13 @@ class MemberResource extends Resource
                                 ->label(__('custom.Photo'))
                                 ->image()
                                 ->disk('local')
-                                ->directory('members_photos')
+                                ->directory('members/photos')
+                                ->visibility('private')
+                                ->preventFilePathTampering()
                                 ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
-                                    $recordId = (string) (request()->route('record') ?? 'new');
-                                    $timestamp = now()->format('YmdHi');
-                                    $originalBase = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                                    $ext = $file->getClientOriginalExtension();
-                                    $safeBase = Str::slug($originalBase, '_');
-                                    return $recordId . '_' . $timestamp . '_' . $safeBase . '.' . $ext;
+                                    $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
+
+                                    return (string) Str::ulid().'.'.$extension;
                                 })
                                 ->columnSpanFull(),
                             Radio::make('brazilian_born')
@@ -122,13 +116,12 @@ class MemberResource extends Resource
                                 ->options(\App\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
                                 ->searchable()
                                 ->required()
-                                ->visible(fn(Get $get) => $get('brazilian_born') === 'false')
+                                ->visible(fn (Get $get) => $get('brazilian_born') === 'false')
                                 ->live()
                                 ->afterStateUpdated(fn (callable $set) => $set('state_of_birth_id', null)),
                             Select::make('state_of_birth_id')
                                 ->label(__('custom.State of Birth'))
-                                ->options(fn (Get $get): array =>
-                                    $get('country_of_birth_id')
+                                ->options(fn (Get $get): array => $get('country_of_birth_id')
                                         ? \App\Models\State::query()
                                             ->where('country_id', $get('country_of_birth_id'))
                                             ->orderBy('name')
@@ -138,13 +131,12 @@ class MemberResource extends Resource
                                 )
                                 ->searchable()
                                 ->required()
-                                ->visible(fn(Get $get) => $get('brazilian_born') === 'false' && $get('country_of_birth_id'))
+                                ->visible(fn (Get $get) => $get('brazilian_born') === 'false' && $get('country_of_birth_id'))
                                 ->live()
                                 ->afterStateUpdated(fn (callable $set) => $set('city_of_birth_id', null)),
                             Select::make('city_of_birth_id')
                                 ->label(__('custom.City of Birth'))
-                                ->options(fn (Get $get): array =>
-                                    $get('state_of_birth_id')
+                                ->options(fn (Get $get): array => $get('state_of_birth_id')
                                         ? \App\Models\City::query()
                                             ->where('state_id', $get('state_of_birth_id'))
                                             ->orderBy('name')
@@ -154,7 +146,7 @@ class MemberResource extends Resource
                                 )
                                 ->searchable()
                                 ->required()
-                                ->visible(fn(Get $get) => $get('brazilian_born') === 'false' && $get('state_of_birth_id')),
+                                ->visible(fn (Get $get) => $get('brazilian_born') === 'false' && $get('state_of_birth_id')),
                             Select::make('document_type')
                                 ->label(__('custom.Document Type'))
                                 ->options([
@@ -211,7 +203,7 @@ class MemberResource extends Resource
                                 ->live(),
                             DatePicker::make('baptized_in_spirit_date')
                                 ->label(__('custom.Baptized in Spirit Date'))
-                                ->visible(fn(Get $get) => (bool) $get('baptized_in_spirit') === true),
+                                ->visible(fn (Get $get) => (bool) $get('baptized_in_spirit') === true),
                             DatePicker::make('baptized')
                                 ->label(__('custom.Baptized Date')),
                         ]),
@@ -239,7 +231,7 @@ class MemberResource extends Resource
                     Step::make(__('custom.Observations'))
                         ->schema([
                             // ...
-                        ])
+                        ]),
 
                 ])->columnSpanFull(),
             ]);
@@ -268,7 +260,7 @@ class MemberResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            MemberPhotosRelationManager::class,
         ];
     }
 

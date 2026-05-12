@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Member;
+use App\Observers\MemberObserver;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-         App::setLocale(session('locale', config('app.locale')));
+        App::setLocale(session('locale', config('app.locale')));
+
+        Member::observe(MemberObserver::class);
     }
 }
