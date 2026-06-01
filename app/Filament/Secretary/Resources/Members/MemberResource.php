@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Members;
+namespace App\Filament\Secretary\Resources\Members;
 
 use App\Actions\ResolveAddressByZipCode;
 use App\Actions\ResolveForeignLocation;
-use App\Filament\Admin\Resources\Members\Pages\EditMember;
-use App\Filament\Admin\Resources\Members\Pages\ListMembers;
-use App\Filament\Admin\Resources\Members\RelationManagers\MemberPhotosRelationManager;
+use App\Filament\Secretary\Resources\Members\Pages\EditMember;
+use App\Filament\Secretary\Resources\Members\Pages\ListMembers;
+use App\Filament\Secretary\Resources\Members\RelationManagers\MemberPhotosRelationManager;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Member;

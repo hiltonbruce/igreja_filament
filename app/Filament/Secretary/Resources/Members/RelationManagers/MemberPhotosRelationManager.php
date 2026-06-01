@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Members\RelationManagers;
+namespace App\Filament\Secretary\Resources\Members\RelationManagers;
 
 use App\Models\MemberPhoto;
 use Filament\Resources\RelationManagers\RelationManager;
