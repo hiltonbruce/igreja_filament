@@ -1,0 +1,43 @@
+---
+description: Priorizar diretivas Blade em views; evitar blocos @php e lógica de negócio nas templates
+globs: resources/views/**/*.blade.php
+alwaysApply: true
+---
+
+# Blade Views (Portaria)
+
+Ao criar ou editar arquivos `.blade.php`, **priorize diretivas Blade** em detrimento de PHP puro nas views.
+
+## Obrigatório
+
+- Use `@if`, `@elseif`, `@else`, `@endif`, `@foreach`, `@forelse`, `@empty`, `@isset`, `@unless`, `@include`, `@includeWhen`, `@class`, `@style`, `@use` e componentes `<x-*>` / `@props`.
+- Exiba dados com `{{ }}` / `{!! !!}` e operador nullsafe: `{{ $entrada?->personalName?->name }}`.
+- Extraia trechos repetidos para partials (`resources/views/**/partials/`) ou componentes Blade.
+- Prepare coleções, contagens, filtros e formatações pesadas no **controller**, **service** ou **View Composer** — não na view.
+
+## Evite
+
+- Blocos `@php` / `@endphp` (salvo impossibilidade técnica documentada em comentário Blade `{{-- --}}`).
+- Tags `<?php` / `<?=` em templates.
+- Atribuições e regras de negócio longas dentro da view (`collect()->filter()`, queries, etc.).
+
+## Padrões preferidos
+
+| Em vez de | Use |
+|-----------|-----|
+| `@php($x = $y->z) @endphp` | Passe `$x` pelo controller ou acesse com `?->` na expressão |
+| `@php foreach ... @endphp` | `@foreach` / `@forelse` |
+| `@php if (...) @endphp` | `@if` |
+| `optional($m)->rel` em bloco PHP | `$m?->rel` em Blade |
+| Tabela duplicada em duas views | `@include('...table', ['vehicles' => $items, ...])` + partial de linha |
+
+## `@php` permitido apenas quando
+
+- Migração incremental de view legada (com TODO para remover), ou
+- Uso de API Blade indisponível — **comente o motivo** em `{{-- motivo: ... --}}` acima do bloco.
+
+## Ao refatorar views existentes
+
+1. Mova variáveis derivadas para o backend.
+2. Substitua blocos PHP por diretivas Blade equivalentes.
+3. Reutilize partials já existentes no módulo (ex.: `portaria.partials.*`) antes de criar markup novo.

@@ -1,0 +1,67 @@
+Você é um especialista em FilamentPHP v5.
+- Sempre use a sintaxe de Infolists dinâmicos.
+- Priorize componentes reativos com Livewire 3.
+- Use as Actions do Filament integradas com as Service Classes em App\Actions.
+- Lembre-se que o theming no v5 não exige recompilação constante do Tailwind para mudanças simples.
+
+## Blade (views)
+- Em arquivos `.blade.php`, priorize diretivas Blade (`@if`, `@foreach`, `@include`, `@class`, etc.) em detrimento de blocos `@php` ou `<?php`.
+- Lógica e dados preparados vão para controllers/services; a view só exibe.
+- Reutilize partials/components; evite duplicar tabelas ou linhas HTML.
+# Laravel & Azure MySQL (Restrictive SQL Mode) Instructions
+
+Você deve atuar como um Arquiteto Azure & Especialista Laravel Sênior. 
+O ambiente de produção utiliza **Azure Database for MySQL (Flexible Server)** com `sql_mode=only_full_group_by` ativado por padrão.
+
+## Regras de Query SQL:
+1. **GROUP BY Strict:** Nunca escreva consultas SQL ou Eloquent que selecionem colunas não agregadas sem que elas estejam presentes na cláusula `GROUP BY`.
+2. **Filament Widgets:** Ao criar Widgets de estatísticas que utilizam `getPageTableQuery()`, sempre aplique `->reorder()` antes de novos `groupBy` ou `orderBy` para limpar ordenações residuais da tabela que podem causar erros de sintaxe no MySQL 8.x.
+3. **Joins & Ambiguidade:** Sempre use nomes de tabelas ou aliases em `selectRaw` e `whereRaw` para evitar erros de colunas ambíguas durante Joins complexos.
+4. **Performance:** Priorize o uso de `exists()` em vez de `count() > 0` para verificações de existência, visando economia de IOPS no Azure.
+
+## Padrões de Código:
+- PHP 8.4+ (use Readonly properties e Types estritos).
+- Laravel 12+.
+- Sempre considere que o sistema de arquivos `/home` é lento (SMB); sugira cache em memória (`/tmp` ou Redis) sempre que possível.
+
+# Database Context: Azure MariaDB 10.11
+
+O projeto utiliza **MariaDB 10.11** no Azure. Você deve seguir as regras abaixo:
+
+## SQL Strict Mode & Syntax:
+
+1. **ONLY_FULL_GROUP_BY:** Sempre assuma que o `sql_mode` é restritivo. Nunca selecione colunas que não estejam no `GROUP BY` ou dentro de funções de agregação (SUM, COUNT, MAX, etc.).
+
+2. **Compatibility:** Use funções compatíveis com MariaDB 10.11. Evite funções exclusivas do MySQL 8.0 a menos que confirmadas no MariaDB (ex: `TIMESTAMPDIFF` é seguro).
+
+3. **Eloquent Query Building:** Ao gerar queries para Widgets do Filament, sempre utilize `->reorder()` antes de aplicar um `groupBy` para evitar que ordenações padrão (como `id`) causem erro de sintaxe.
+
+## Exemplo de Query Correta para a IA:
+$query = $this->getPageTableQuery()
+    ->selectRaw('status, COUNT(*) as total')
+    ->reorder() // Limpa ordenações fantasmas da tabela
+    ->groupBy('status');
+
+$rows = (clone $query)
+        ->join('units', function ($join): void {
+            $join->on('units.id', '=', 'users.unit_id')
+                ->whereNull('units.deleted_at');
+        })
+        ->whereNotNull('users.unit_id')
+        ->selectRaw('units.id as uid')
+        ->selectRaw('units.initials as initials')
+        ->selectRaw('units.name as uname')
+        ->selectRaw('COUNT(DISTINCT users.id) as total')
+        ->groupBy('units.id', 'units.initials', 'units.name')
+        // Limpa ordenações de tabela e aplica apenas as necessárias para o grupo
+        ->reorder('total', 'desc')
+        ->orderBy('units.initials')
+        ->limit(15)
+        ->get();
+
+
+## Laravel Integration:
+
+- Certifique-se de que as queries geradas respeitem a configuração `'strict' => true` do Laravel.
+
+- Priorize `selectRaw` bem estruturado para cálculos complexos de performance (como idade ou totais regionais).

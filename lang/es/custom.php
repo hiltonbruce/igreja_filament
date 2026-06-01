@@ -49,6 +49,11 @@ return [
     'Countries' => 'Países',
     // States
     'States' => 'Estados',
+    // Cities
+    'Cities' => 'Ciudades',
+    'Capital City' => 'Capital del estado',
+    'IBGE Code' => 'Código IBGE',
+    'Area Code' => 'Código de área',
     // Members
     'Member' => 'Miembro',
     'Members' => 'Miembros',
