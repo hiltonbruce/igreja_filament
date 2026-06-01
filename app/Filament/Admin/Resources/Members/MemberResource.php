@@ -2,10 +2,16 @@
 
 namespace App\Filament\Admin\Resources\Members;
 
+use App\Actions\ResolveAddressByZipCode;
+use App\Actions\ResolveForeignLocation;
 use App\Filament\Admin\Resources\Members\Pages\EditMember;
 use App\Filament\Admin\Resources\Members\Pages\ListMembers;
 use App\Filament\Admin\Resources\Members\RelationManagers\MemberPhotosRelationManager;
+use App\Models\City;
+use App\Models\Country;
 use App\Models\Member;
+use App\Models\Neighborhood;
+use App\Models\State;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -17,6 +23,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
@@ -113,7 +120,7 @@ class MemberResource extends Resource
                                 ->live(),
                             Select::make('country_of_birth_id')
                                 ->label(__('custom.Country of Birth'))
-                                ->options(\App\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->options(Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
                                 ->searchable()
                                 ->required()
                                 ->visible(fn (Get $get) => $get('brazilian_born') === 'false')
@@ -122,7 +129,7 @@ class MemberResource extends Resource
                             Select::make('state_of_birth_id')
                                 ->label(__('custom.State of Birth'))
                                 ->options(fn (Get $get): array => $get('country_of_birth_id')
-                                        ? \App\Models\State::query()
+                                        ? State::query()
                                             ->where('country_id', $get('country_of_birth_id'))
                                             ->orderBy('name')
                                             ->pluck('name', 'id')
@@ -137,7 +144,7 @@ class MemberResource extends Resource
                             Select::make('city_of_birth_id')
                                 ->label(__('custom.City of Birth'))
                                 ->options(fn (Get $get): array => $get('state_of_birth_id')
-                                        ? \App\Models\City::query()
+                                        ? City::query()
                                             ->where('state_id', $get('state_of_birth_id'))
                                             ->orderBy('name')
                                             ->pluck('name', 'id')
@@ -165,24 +172,97 @@ class MemberResource extends Resource
                             TextInput::make('phone')
                                 ->label(__('custom.Phone'))
                                 ->required(),
-                            // Endereço residencial
+                            // Endereço residencial — o país define o comportamento:
+                            // Brasil usa o CEP (busca local + BrasilAPI) e o exterior
+                            // usa campos de texto livre que viram registros no banco.
                             Select::make('country_id')
                                 ->label(__('custom.Country'))
-                                ->options(\App\Models\Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->options(fn (): array => Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
                                 ->searchable()
-                                ->default(55),
+                                ->default(fn (): int => self::brazilCountryId())
+                                ->live()
+                                ->afterStateUpdated(function (Set $set): void {
+                                    $set('zip_code', null);
+                                    $set('state_id', null);
+                                    $set('city_id', null);
+                                    $set('neighborhood_id', null);
+                                    $set('foreign_state', null);
+                                    $set('foreign_city', null);
+                                    $set('address', null);
+                                }),
+                            TextInput::make('zip_code')
+                                ->label(__('custom.Zip Code'))
+                                ->helperText(fn (Get $get): ?string => self::isBrazil($get('country_id'))
+                                    ? __('custom.Fill in the ZIP code to load the address automatically')
+                                    : null)
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                                    if (! self::isBrazil($get('country_id'))) {
+                                        return;
+                                    }
+
+                                    $resolved = app(ResolveAddressByZipCode::class)->handle($state);
+
+                                    if ($resolved === null) {
+                                        return;
+                                    }
+
+                                    $set('zip_code', $resolved['zip_code']);
+                                    $set('country_id', $resolved['country_id']);
+                                    $set('state_id', $resolved['state_id']);
+                                    $set('city_id', $resolved['city_id']);
+                                    $set('neighborhood_id', $resolved['neighborhood_id']);
+                                    $set('address', $resolved['address']);
+                                }),
+                            // Brasil: seleção normalizada preenchida pelo CEP.
                             Select::make('state_id')
                                 ->label(__('custom.State'))
-                                ->options(\App\Models\State::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                                ->searchable(),
+                                ->options(fn (): array => State::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->searchable()
+                                ->visible(fn (Get $get): bool => self::isBrazil($get('country_id'))),
                             Select::make('city_id')
                                 ->label(__('custom.City'))
-                                ->options(\App\Models\City::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                                ->searchable(),
+                                ->options(fn (): array => City::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->searchable()
+                                ->visible(fn (Get $get): bool => self::isBrazil($get('country_id'))),
                             Select::make('neighborhood_id')
                                 ->label(__('custom.Neighborhood'))
-                                ->options(\App\Models\Neighborhood::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                                ->searchable(),
+                                ->options(fn (): array => Neighborhood::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->searchable()
+                                ->visible(fn (Get $get): bool => self::isBrazil($get('country_id'))),
+                            // Exterior: texto livre normalizado em registros do banco.
+                            TextInput::make('foreign_state')
+                                ->label(__('custom.State/Province'))
+                                ->dehydrated(false)
+                                ->visible(fn (Get $get): bool => self::isForeign($get('country_id')))
+                                ->required(fn (Get $get): bool => self::isForeign($get('country_id')))
+                                ->afterStateHydrated(function (Get $get, Set $set): void {
+                                    if ($get('state_id')) {
+                                        $set('foreign_state', State::query()->find($get('state_id'))?->name);
+                                    }
+                                })
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                                    $set('state_id', app(ResolveForeignLocation::class)
+                                        ->resolveState((int) $get('country_id'), $state));
+                                }),
+                            TextInput::make('foreign_city')
+                                ->label(__('custom.City'))
+                                ->dehydrated(false)
+                                ->visible(fn (Get $get): bool => self::isForeign($get('country_id')))
+                                ->afterStateHydrated(function (Get $get, Set $set): void {
+                                    if ($get('city_id')) {
+                                        $set('foreign_city', City::query()->find($get('city_id'))?->name);
+                                    }
+                                })
+                                ->live(onBlur: true)
+                                ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                                    $set('city_id', app(ResolveForeignLocation::class)->resolveCity(
+                                        (int) $get('country_id'),
+                                        $get('state_id') ? (int) $get('state_id') : null,
+                                        $state,
+                                    ));
+                                }),
                             TextInput::make('address')
                                 ->label(__('custom.Address'))
                                 ->columnSpanFull(),
@@ -190,8 +270,6 @@ class MemberResource extends Resource
                                 ->label(__('custom.Number')),
                             TextInput::make('complement')
                                 ->label(__('custom.Complement')),
-                            TextInput::make('zip_code')
-                                ->label(__('custom.Zip Code')),
                         ])
                         ->columns(3),
                     Step::make(__('custom.Ecclesiastical'))
@@ -213,11 +291,11 @@ class MemberResource extends Resource
                                 ->label(__('custom.Matrimonial Status')),
                             Select::make('mother_member_id')
                                 ->label(__('custom.Mother Member'))
-                                ->options(\App\Models\Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->options(Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
                                 ->searchable(),
                             Select::make('father_member_id')
                                 ->label(__('custom.Father Member'))
-                                ->options(\App\Models\Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                                ->options(Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
                                 ->searchable(),
                         ]),
                     Step::make(__('custom.Professional'))
@@ -235,6 +313,21 @@ class MemberResource extends Resource
 
                 ])->columnSpanFull(),
             ]);
+    }
+
+    protected static function brazilCountryId(): int
+    {
+        return once(fn (): int => (int) (Country::query()->where('iso_code', 'BR')->value('id') ?? 0));
+    }
+
+    protected static function isBrazil(mixed $countryId): bool
+    {
+        return filled($countryId) && (int) $countryId === self::brazilCountryId();
+    }
+
+    protected static function isForeign(mixed $countryId): bool
+    {
+        return filled($countryId) && (int) $countryId !== self::brazilCountryId();
     }
 
     public static function table(Table $table): Table

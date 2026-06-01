@@ -12,12 +12,26 @@ class Street extends Model
 
     protected $fillable = [
         'name',
+        'zip_code',
+        'latitude',
+        'longitude',
         'neighborhood_id',
         'city_id',
         'state_id',
         'country_id',
         'user_id',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+        ];
+    }
 
     public function neighborhood(): BelongsTo
     {

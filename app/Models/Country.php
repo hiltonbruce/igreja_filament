@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Country extends Model
 {
+    protected $fillable = [
+        'name',
+        'iso_code',
+        'phone_code',
+        'currency',
+        'user_id',
+    ];
+
     public function states(): HasMany
     {
         return $this->hasMany(State::class);
