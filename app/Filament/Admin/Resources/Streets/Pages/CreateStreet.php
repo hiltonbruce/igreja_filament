@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Members\Pages;
+namespace App\Filament\Admin\Resources\Streets\Pages;
 
-use App\Filament\Admin\Resources\Members\MemberResource;
+use App\Filament\Admin\Resources\Streets\StreetResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateMember extends CreateRecord
+class CreateStreet extends CreateRecord
 {
-    protected static string $resource = MemberResource::class;
+    protected static string $resource = StreetResource::class;
 
     public function getTitle(): string
     {
-        return __('custom.Register').' '.__('custom.Member');
+        return __('custom.Register').' '.__('custom.Street');
     }
 
     protected function getCreateFormAction(): Action

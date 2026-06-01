@@ -14,7 +14,7 @@ class ListCountries extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label(__('custom.Register') . ' ' . __('custom.Country')),
+                ->label(__('custom.Register').' '.__('custom.Country')),
         ];
     }
 }

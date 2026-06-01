@@ -4,31 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class City extends Model
+class Street extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
         'name',
+        'neighborhood_id',
+        'city_id',
         'state_id',
         'country_id',
-        'capital_city',
-        'ibge_code',
-        'latitude',
-        'longitude',
-        'timezone',
-        'area_code',
         'user_id',
     ];
 
-    protected function casts(): array
+    public function neighborhood(): BelongsTo
     {
-        return [
-            'capital_city' => 'boolean',
-        ];
+        return $this->belongsTo(Neighborhood::class);
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function state(): BelongsTo
@@ -44,10 +42,5 @@ class City extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function neighborhoods(): HasMany
-    {
-        return $this->hasMany(Neighborhood::class);
     }
 }

@@ -55,6 +55,11 @@ return [
     'Capital City' => 'Capital do Estado',
     'IBGE Code' => 'Código IBGE',
     'Area Code' => 'DDD',
+    // Neighborhoods
+    'Neighborhoods' => 'Bairros',
+    // Streets
+    'Street' => 'Rua',
+    'Streets' => 'Ruas',
     // Members
     'Member' => 'Membro',
     'Members' => 'Membros',

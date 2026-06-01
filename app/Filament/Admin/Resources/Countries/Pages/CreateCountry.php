@@ -12,7 +12,7 @@ class CreateCountry extends CreateRecord
 
     public function getTitle(): string
     {
-        return __('custom.Register') . ' ' . __('custom.Country');
+        return __('custom.Register').' '.__('custom.Country');
     }
 
     protected function getCreateFormAction(): Action
@@ -24,6 +24,6 @@ class CreateCountry extends CreateRecord
     protected function getCreateAnotherFormAction(): Action
     {
         return parent::getCreateAnotherFormAction()
-            ->label(__('custom.Register') . ' & ' . __('custom.Create') . ' ' . __('custom.New'));
+            ->label(__('custom.Register').' & '.__('custom.Create').' '.__('custom.New'));
     }
 }

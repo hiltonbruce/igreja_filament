@@ -2,11 +2,10 @@
 
 namespace App\Filament\Admin\Resources\Members\Pages;
 
-use Filament\Actions\CreateAction;
-use Filament\Support\Enums\Width;
 use App\Filament\Admin\Resources\Members\MemberResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 
 class ListMembers extends ListRecords
 {
@@ -16,7 +15,7 @@ class ListMembers extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label(__('custom.Register') . ' ' . __('custom.Member'))
+                ->label(__('custom.Register').' '.__('custom.Member'))
                 ->modalWidth(Width::SixExtraLarge),
         ];
     }

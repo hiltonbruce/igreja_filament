@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Members\Pages;
+namespace App\Filament\Admin\Resources\Neighborhoods\Pages;
 
-use App\Filament\Admin\Resources\Members\MemberResource;
+use App\Filament\Admin\Resources\Neighborhoods\NeighborhoodResource;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 
-class CreateMember extends CreateRecord
+class CreateNeighborhood extends CreateRecord
 {
-    protected static string $resource = MemberResource::class;
+    protected static string $resource = NeighborhoodResource::class;
 
     public function getTitle(): string
     {
-        return __('custom.Register').' '.__('custom.Member');
+        return __('custom.Register').' '.__('custom.Neighborhood');
     }
 
     protected function getCreateFormAction(): Action
