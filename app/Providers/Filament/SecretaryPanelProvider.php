@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\EliuTheme;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -9,7 +10,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -23,20 +23,17 @@ class SecretaryPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        return EliuTheme::apply($panel)
             ->id('secretary')
             ->path('secretary')
             ->homeUrl('/')
             ->login()
-            ->colors([
-                'primary' => Color::Amber,
-            ])
-            ->discoverResources(in: app_path('Filament/Secretary/Resources'), for: 'App\Filament\Secretary\Resources')
-            ->discoverPages(in: app_path('Filament/Secretary/Pages'), for: 'App\Filament\Secretary\Pages')
+            ->discoverResources(in: app_path('Filament/Secretary/Resources'), for: 'App\\Filament\\Secretary\\Resources')
+            ->discoverPages(in: app_path('Filament/Secretary/Pages'), for: 'App\\Filament\\Secretary\\Pages')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Secretary/Widgets'), for: 'App\Filament\Secretary\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Secretary/Widgets'), for: 'App\\Filament\\Secretary\\Widgets')
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,

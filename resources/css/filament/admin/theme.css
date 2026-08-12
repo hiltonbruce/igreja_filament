@@ -1,0 +1,295 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/*
+ |--------------------------------------------------------------------------
+ | Eliú — Filament theme
+ | Dark: welcome night hero (unchanged)
+ | Light: soft mist / paper atmosphere in the same palette
+ |--------------------------------------------------------------------------
+ */
+
+:root {
+    --eliu-ink: #0c1a24;
+    --eliu-deep: #122a38;
+    --eliu-mid: #1a3d52;
+    --eliu-gold: #c9a227;
+    --eliu-gold-soft: #e8c96a;
+    --eliu-mist: #e8eef2;
+    --eliu-paper: #f4f7f9;
+    --eliu-font-display: 'Fraunces', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+@keyframes eliu-beam-drift {
+    from {
+        transform: translateX(-4%) rotate(-2deg);
+        opacity: 0.7;
+    }
+    to {
+        transform: translateX(6%) rotate(1deg);
+        opacity: 1;
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Atmosphere layers                                                          */
+/* -------------------------------------------------------------------------- */
+
+.eliu-atmosphere {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* Light — soft mist / paper with gold wash */
+.eliu-atmosphere__hero {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 90% 70% at 72% 12%, rgba(201, 162, 39, 0.16), transparent 55%),
+        radial-gradient(ellipse 65% 55% at 8% 88%, rgba(26, 61, 82, 0.1), transparent 52%),
+        linear-gradient(165deg, #f7fafb 0%, var(--eliu-paper) 42%, var(--eliu-mist) 100%);
+}
+
+.eliu-atmosphere__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(12, 26, 36, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(12, 26, 36, 0.045) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%);
+}
+
+.eliu-atmosphere__beam {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: -25%;
+    width: 150%;
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        rgba(201, 162, 39, 0.09) 45%,
+        transparent 70%
+    );
+    animation: eliu-beam-drift 14s ease-in-out infinite alternate;
+}
+
+.eliu-atmosphere__arch {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    width: 100%;
+    height: 55%;
+}
+
+.eliu-atmosphere__arch--light {
+    display: block;
+    opacity: 0.28;
+}
+
+.eliu-atmosphere__arch--dark {
+    display: none;
+}
+
+/* Dark — welcome night hero (do not soften) */
+.dark .eliu-atmosphere__hero {
+    background:
+        radial-gradient(ellipse 90% 70% at 70% 20%, rgba(201, 162, 39, 0.18), transparent 55%),
+        radial-gradient(ellipse 60% 50% at 15% 85%, rgba(26, 61, 82, 0.9), transparent 50%),
+        linear-gradient(165deg, var(--eliu-ink) 0%, var(--eliu-deep) 45%, #0a1520 100%);
+}
+
+.dark .eliu-atmosphere__grid {
+    background-image:
+        linear-gradient(rgba(232, 238, 242, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 238, 242, 0.04) 1px, transparent 1px);
+}
+
+.dark .eliu-atmosphere__beam {
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        rgba(232, 201, 106, 0.07) 45%,
+        transparent 70%
+    );
+}
+
+.dark .eliu-atmosphere__arch--light {
+    display: none;
+}
+
+.dark .eliu-atmosphere__arch--dark {
+    display: block;
+    opacity: 0.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eliu-atmosphere__beam {
+        animation: none;
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/* App shell                                                                  */
+/* -------------------------------------------------------------------------- */
+
+.fi-body {
+    position: relative;
+    background-color: transparent !important;
+}
+
+.fi-layout,
+.fi-simple-layout {
+    position: relative;
+    z-index: 1;
+}
+
+.fi-simple-layout {
+    background: transparent !important;
+}
+
+.fi-simple-layout::before {
+    content: none;
+}
+
+/* Login card — light */
+.fi-simple-main {
+    @apply shadow-lg;
+    border: 1px solid rgba(26, 61, 82, 0.1);
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow:
+        0 20px 40px -24px rgba(12, 26, 36, 0.28),
+        0 0 0 1px rgba(201, 162, 39, 0.1);
+}
+
+/* Login card — dark (unchanged feel) */
+.dark .fi-simple-main {
+    background-color: rgba(18, 42, 56, 0.88);
+    border-color: rgba(232, 201, 106, 0.22);
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 24px 48px -20px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(232, 201, 106, 0.08);
+}
+
+.fi-simple-header-heading {
+    font-family: var(--eliu-font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--eliu-mid);
+}
+
+.dark .fi-simple-header-heading {
+    color: var(--eliu-gold-soft);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sidebar                                                                    */
+/* Light: mist glass · Dark: night glass (unchanged)                          */
+/* -------------------------------------------------------------------------- */
+
+.fi-sidebar {
+    @apply dark:lg:bg-transparent;
+}
+
+/* Light — mobile / overlay */
+.fi-sidebar.fi-sidebar-open {
+    background:
+        linear-gradient(180deg, rgba(201, 162, 39, 0.07) 0%, transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, var(--eliu-paper) 100%);
+    border-inline-end: 1px solid rgba(12, 26, 36, 0.06);
+}
+
+/* Dark — mobile overlay (night glass) */
+.dark .fi-sidebar.fi-sidebar-open {
+    background:
+        linear-gradient(180deg, rgba(201, 162, 39, 0.1) 0%, transparent 28%),
+        linear-gradient(180deg, rgba(12, 26, 36, 0.96), rgba(18, 42, 56, 0.94));
+    border-inline-end: 1px solid rgba(232, 201, 106, 0.08);
+}
+
+@media (width >= 64rem) {
+    /* Light — desktop glass over mist atmosphere */
+    .fi-sidebar.fi-sidebar-open {
+        background:
+            linear-gradient(180deg, rgba(201, 162, 39, 0.09) 0%, transparent 28%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 247, 249, 0.86));
+        backdrop-filter: blur(14px);
+        border-inline-end: 1px solid rgba(12, 26, 36, 0.06);
+        box-shadow: 1px 0 0 rgba(255, 255, 255, 0.6);
+    }
+
+    /* Dark — desktop night glass (do not change) */
+    .dark .fi-sidebar.fi-sidebar-open {
+        background:
+            linear-gradient(180deg, rgba(201, 162, 39, 0.1) 0%, transparent 28%),
+            linear-gradient(180deg, rgba(12, 26, 36, 0.78), rgba(18, 42, 56, 0.62));
+        backdrop-filter: blur(14px);
+        border-inline-end: 1px solid rgba(232, 201, 106, 0.08);
+        box-shadow: 1px 0 0 rgba(232, 201, 106, 0.08);
+    }
+}
+
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(12, 26, 36, 0.06);
+}
+
+.dark .fi-sidebar-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Topbar */
+.fi-topbar {
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(12, 26, 36, 0.06);
+}
+
+.dark .fi-topbar {
+    background: rgba(12, 26, 36, 0.55);
+    border-bottom-color: rgba(232, 201, 106, 0.1);
+}
+
+/* Brand */
+.fi-logo,
+.fi-sidebar-header .fi-logo,
+.fi-topbar .fi-logo {
+    font-family: var(--eliu-font-display);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--eliu-mid) !important;
+}
+
+.dark .fi-logo,
+.dark .fi-sidebar-header .fi-logo,
+.dark .fi-topbar .fi-logo {
+    color: var(--eliu-gold-soft) !important;
+}
+
+.fi-page-header-heading {
+    font-family: var(--eliu-font-display);
+    letter-spacing: -0.02em;
+}
+
+.fi-section-content-ctn,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat,
+.fi-sc-has-border {
+    backdrop-filter: blur(8px);
+}
+
+.fi-section,
+.fi-wi-stats-overview-stat,
+.fi-ta-ctn,
+.fi-fo-tabs {
+    @apply rounded-xl;
+}
+
+.fi-btn-primary {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+}
