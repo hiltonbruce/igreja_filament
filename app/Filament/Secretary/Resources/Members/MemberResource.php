@@ -4,12 +4,15 @@ namespace App\Filament\Secretary\Resources\Members;
 
 use App\Actions\ResolveAddressByZipCode;
 use App\Actions\ResolveForeignLocation;
+use App\Enums\LetterType;
+use App\Enums\SpiritualSituation;
 use App\Filament\Secretary\Resources\Members\Pages\EditMember;
 use App\Filament\Secretary\Resources\Members\Pages\ListMembers;
 use App\Filament\Secretary\Resources\Members\RelationManagers\MemberPhotosRelationManager;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Member;
+use App\Models\MemberSpiritualSituation;
 use App\Models\Neighborhood;
 use App\Models\State;
 use Filament\Actions\BulkActionGroup;
@@ -18,9 +21,12 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -28,7 +34,10 @@ use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -62,6 +71,19 @@ class MemberResource extends Resource
                 Wizard::make([
                     Step::make(__('custom.Personal Data'))
                         ->schema([
+                            FileUpload::make('photo')
+                                ->label(__('custom.Photo'))
+                                ->image()
+                                ->disk('local')
+                                ->directory('members/photos')
+                                ->visibility('private')
+                                ->preventFilePathTampering()
+                                ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
+                                    $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
+
+                                    return (string) Str::ulid().'.'.$extension;
+                                })
+                                ->columnSpanFull(),
                             TextInput::make('name')
                                 ->label(__('custom.Name'))
                                 ->columnSpanFull()
@@ -82,9 +104,20 @@ class MemberResource extends Resource
                                 ->inline()
                                 ->inlineLabel(false)
                                 ->options([
-                                    'male' => __('custom.Male'),
-                                    'female' => __('custom.Female'),
+                                    '1' => __('custom.Male'),
+                                    '0' => __('custom.Female'),
                                 ])
+                                ->default('1')
+                                ->afterStateHydrated(function (Radio $component, mixed $state): void {
+                                    if ($state === null || $state === '') {
+                                        $component->state('1');
+
+                                        return;
+                                    }
+
+                                    $component->state(filter_var($state, FILTER_VALIDATE_BOOLEAN) ? '1' : '0');
+                                })
+                                ->dehydrateStateUsing(fn (mixed $state): bool => in_array($state, ['1', 1, true], true))
                                 ->required(),
                             Toggle::make('donor')
                                 ->label(__('custom.Organ Donor')),
@@ -94,19 +127,6 @@ class MemberResource extends Resource
                                     'O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-',
                                     'B+' => 'B+', 'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-',
                                 ]),
-                            FileUpload::make('photo')
-                                ->label(__('custom.Photo'))
-                                ->image()
-                                ->disk('local')
-                                ->directory('members/photos')
-                                ->visibility('private')
-                                ->preventFilePathTampering()
-                                ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
-                                    $extension = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
-
-                                    return (string) Str::ulid().'.'.$extension;
-                                })
-                                ->columnSpanFull(),
                             Radio::make('brazilian_born')
                                 ->label(__('custom.Brazilian'))
                                 ->options([
@@ -117,7 +137,8 @@ class MemberResource extends Resource
                                 ->inline()
                                 ->inlineLabel(false)
                                 ->required()
-                                ->live(),
+                                ->live()
+                                ->dehydrated(false),
                             Select::make('country_of_birth_id')
                                 ->label(__('custom.Country of Birth'))
                                 ->options(Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
@@ -274,8 +295,148 @@ class MemberResource extends Resource
                         ->columns(3),
                     Step::make(__('custom.Ecclesiastical'))
                         ->schema([
-                            Toggle::make('spiritual_situation')
-                                ->label(__('custom.Spiritual Situation')),
+                            TextEntry::make('current_spiritual_situation')
+                                ->label(__('custom.Spiritual Situation'))
+                                ->badge()
+                                ->size('lg')
+                                ->state(function (Get $get, ?Member $record): SpiritualSituation {
+                                    $items = $get('spiritualSituations');
+
+                                    if (is_array($items)) {
+                                        return MemberSpiritualSituation::latestFromStates($items);
+                                    }
+
+                                    return $record?->currentSpiritualSituation() ?? SpiritualSituation::InCommunion;
+                                })
+                                ->color(fn (SpiritualSituation $state): string => $state->getColor())
+                                ->formatStateUsing(fn (SpiritualSituation $state): string => $state->getLabel())
+                                ->helperText(__('custom.The current situation comes from the latest record. Without records, the member stays in communion.'))
+                                ->columnSpanFull(),
+                            Repeater::make('spiritualSituations')
+                                ->label(__('custom.Spiritual situation records'))
+                                ->relationship()
+                                ->defaultItems(0)
+                                ->addActionLabel(__('custom.Register spiritual situation'))
+                                ->collapsible()
+                                ->reorderable(false)
+                                ->live()
+                                ->columnSpanFull()
+                                ->itemLabel(fn (array $state): ?string => self::spiritualSituationItemLabel($state))
+                                ->schema([
+                                    Select::make('situation')
+                                        ->label(__('custom.Spiritual Situation'))
+                                        ->enum(SpiritualSituation::class)
+                                        ->options(fn (Get $get): array => SpiritualSituation::manualOptions(
+                                            SpiritualSituation::fromMixed($get('situation')),
+                                        ))
+                                        ->default(SpiritualSituation::InCommunion)
+                                        ->required()
+                                        ->live()
+                                        ->rule(function (Select $component): \Closure {
+                                            return function (string $attribute, mixed $value, \Closure $fail) use ($component): void {
+                                                if (SpiritualSituation::fromMixed($value) !== SpiritualSituation::Transferred) {
+                                                    return;
+                                                }
+
+                                                $existingId = null;
+
+                                                if (preg_match('/record-(\d+)\.situation$/', $component->getStatePath(), $matches) === 1) {
+                                                    $existingId = $matches[1];
+                                                }
+
+                                                $existing = filled($existingId)
+                                                    ? MemberSpiritualSituation::query()->find($existingId)
+                                                    : null;
+
+                                                if ($existing?->situation === SpiritualSituation::Transferred) {
+                                                    return;
+                                                }
+
+                                                $fail(__('custom.Transferred is set automatically by a change letter.'));
+                                            };
+                                        })
+                                        ->afterStateUpdated(function (Set $set, mixed $state): void {
+                                            $situation = SpiritualSituation::fromMixed($state);
+
+                                            if ($situation !== SpiritualSituation::Disciplined) {
+                                                $set('discipline_days', null);
+                                            }
+
+                                            if ($situation === null || ! $situation->requiresReason()) {
+                                                $set('reason', null);
+                                            }
+                                        }),
+                                    DatePicker::make('recorded_at')
+                                        ->label(__('custom.Record date'))
+                                        ->default(now()->toDateString())
+                                        ->required()
+                                        ->live(),
+                                    Select::make('directed_by_member_id')
+                                        ->label(__('custom.Service directed by'))
+                                        ->relationship('directedBy', 'name')
+                                        ->searchable()
+                                        ->required(),
+                                    TextInput::make('discipline_days')
+                                        ->label(__('custom.Discipline days'))
+                                        ->integer()
+                                        ->minValue(1)
+                                        ->rule('nullable')
+                                        ->helperText(__('custom.Leave blank for an indefinite period'))
+                                        ->visible(fn (Get $get): bool => SpiritualSituation::fromMixed($get('situation')) === SpiritualSituation::Disciplined)
+                                        ->live(),
+                                    Textarea::make('reason')
+                                        ->label(__('custom.Reason'))
+                                        ->rows(3)
+                                        ->maxLength(2000)
+                                        ->columnSpanFull()
+                                        ->required(fn (Get $get): bool => SpiritualSituation::fromMixed($get('situation'))?->requiresReason() === true)
+                                        ->rule(fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                            if (SpiritualSituation::fromMixed($get('situation'))?->requiresReason() !== true) {
+                                                return;
+                                            }
+
+                                            if (! filled(is_string($value) ? trim($value) : $value)) {
+                                                $fail(__('custom.The reason is required for this spiritual situation.'));
+                                            }
+                                        })
+                                        ->visible(fn (Get $get): bool => SpiritualSituation::fromMixed($get('situation'))?->requiresReason() === true)
+                                        ->live(),
+                                ])
+                                ->columns(2),
+                            Repeater::make('letters')
+                                ->label(__('custom.Letters'))
+                                ->relationship()
+                                ->defaultItems(0)
+                                ->addActionLabel(__('custom.Register letter'))
+                                ->collapsible()
+                                ->reorderable(false)
+                                ->columnSpanFull()
+                                ->itemLabel(fn (array $state): ?string => self::letterItemLabel($state))
+                                ->schema([
+                                    Select::make('type')
+                                        ->label(__('custom.Letter type'))
+                                        ->options(LetterType::class)
+                                        ->required()
+                                        ->live()
+                                        ->helperText(fn (Get $get): ?string => LetterType::fromMixed($get('type')) === LetterType::Change
+                                            ? __('custom.A change letter sets the member spiritual situation to transferred.')
+                                            : null),
+                                    DatePicker::make('issued_at')
+                                        ->label(__('custom.Letter date'))
+                                        ->default(now()->toDateString())
+                                        ->required(),
+                                    Select::make('directed_by_member_id')
+                                        ->label(__('custom.Service directed by'))
+                                        ->relationship('directedBy', 'name')
+                                        ->searchable()
+                                        ->required(),
+                                    TextInput::make('destination')
+                                        ->label(__('custom.Destination church'))
+                                        ->required()
+                                        ->maxLength(255)
+                                        ->columnSpanFull(),
+                                ])
+                                ->columns(2),
                             Toggle::make('baptized_in_spirit')
                                 ->label(__('custom.Baptized in Spirit'))
                                 ->live(),
@@ -330,11 +491,84 @@ class MemberResource extends Resource
         return filled($countryId) && (int) $countryId !== self::brazilCountryId();
     }
 
+    /**
+     * @param  array<string, mixed>  $state
+     */
+    protected static function spiritualSituationItemLabel(array $state): ?string
+    {
+        $situation = SpiritualSituation::fromMixed($state['situation'] ?? null);
+
+        if ($situation === null) {
+            return null;
+        }
+
+        $label = $situation->getLabel();
+
+        if ($situation === SpiritualSituation::Disciplined) {
+            $days = $state['discipline_days'] ?? null;
+            $label .= ' · '.(filled($days)
+                ? $days.' '.__('custom.days')
+                : __('custom.Indefinite period'));
+        }
+
+        if ($situation->requiresReason() && filled($state['reason'] ?? null)) {
+            $label .= ' · '.Str::limit(trim((string) $state['reason']), 48);
+        }
+
+        $recordedAt = $state['recorded_at'] ?? null;
+
+        if ($recordedAt instanceof \DateTimeInterface) {
+            $label .= ' · '.$recordedAt->format('d/m/Y');
+        } elseif (is_string($recordedAt) && $recordedAt !== '') {
+            $label .= ' · '.Carbon::parse($recordedAt)->format('d/m/Y');
+        }
+
+        return $label;
+    }
+
+    /**
+     * @param  array<string, mixed>  $state
+     */
+    protected static function letterItemLabel(array $state): ?string
+    {
+        $type = LetterType::fromMixed($state['type'] ?? null);
+
+        if ($type === null) {
+            return null;
+        }
+
+        $label = $type->getLabel();
+        $destination = trim((string) ($state['destination'] ?? ''));
+
+        if ($destination !== '') {
+            $label .= ' · '.Str::limit($destination, 48);
+        }
+
+        $issuedAt = $state['issued_at'] ?? null;
+
+        if ($issuedAt instanceof \DateTimeInterface) {
+            $label .= ' · '.$issuedAt->format('d/m/Y');
+        } elseif (is_string($issuedAt) && $issuedAt !== '') {
+            $label .= ' · '.Carbon::parse($issuedAt)->format('d/m/Y');
+        }
+
+        return $label;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('latestSpiritualSituation'))
             ->columns([
-                //
+                TextColumn::make('name')
+                    ->label(__('custom.Name'))
+                    ->searchable(),
+                TextColumn::make('current_spiritual_situation')
+                    ->label(__('custom.Spiritual Situation'))
+                    ->badge()
+                    ->state(fn (Member $record): SpiritualSituation => $record->currentSpiritualSituation())
+                    ->formatStateUsing(fn (SpiritualSituation $state): string => $state->getLabel())
+                    ->color(fn (SpiritualSituation $state): string => $state->getColor()),
             ])
             ->filters([
                 //
