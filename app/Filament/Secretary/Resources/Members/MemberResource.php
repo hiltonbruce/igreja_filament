@@ -20,6 +20,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -30,6 +31,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
@@ -37,6 +39,7 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -88,14 +91,8 @@ class MemberResource extends Resource
                                 ->label(__('custom.Name'))
                                 ->columnSpanFull()
                                 ->required(),
-                            TextInput::make('father_name')
-                                ->label(__('custom.Father Name'))
-                                ->columnSpanFull()
-                                ->required(),
-                            TextInput::make('mother_name')
-                                ->label(__('custom.Mother Name'))
-                                ->columnSpanFull()
-                                ->required(),
+                            ...self::parentNameFields('father_name', 'father_member_id', __('custom.Father Name'), true),
+                            ...self::parentNameFields('mother_name', 'mother_member_id', __('custom.Mother Name'), false),
                             DatePicker::make('birth_date')
                                 ->label(__('custom.Birth Date'))
                                 ->required(),
@@ -450,14 +447,6 @@ class MemberResource extends Resource
                         ->schema([
                             Toggle::make('matrimonial_status')
                                 ->label(__('custom.Matrimonial Status')),
-                            Select::make('mother_member_id')
-                                ->label(__('custom.Mother Member'))
-                                ->options(Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                                ->searchable(),
-                            Select::make('father_member_id')
-                                ->label(__('custom.Father Member'))
-                                ->options(Member::query()->orderBy('name')->pluck('name', 'id')->toArray())
-                                ->searchable(),
                         ]),
                     Step::make(__('custom.Professional'))
                         ->schema([
@@ -474,6 +463,92 @@ class MemberResource extends Resource
 
                 ])->columnSpanFull(),
             ]);
+    }
+
+    /**
+     * @return array<int, Hidden|TextInput>
+     */
+    protected static function parentNameFields(string $nameField, string $idField, string $label, bool $male): array
+    {
+        return [
+            TextInput::make($nameField)
+                ->label($label)
+                ->columnSpanFull()
+                ->required()
+                ->maxLength(255)
+                ->autocomplete(false)
+                ->live(debounce: 400)
+                ->helperText(__('custom.Click a member to link the parent, otherwise the id is not saved.'))
+                ->afterStateUpdated(function (Set $set, Get $get, ?string $state, TextInput $component) use ($nameField, $idField): void {
+                    $livewire = $component->getLivewire();
+
+                    if (method_exists($livewire, 'parentLinkIsFresh') && $livewire->parentLinkIsFresh($nameField)) {
+                        $linkedName = Member::query()->whereKey($get($idField))->value('name');
+
+                        if (filled($linkedName) && trim((string) $state) !== trim((string) $linkedName)) {
+                            $set($nameField, $linkedName);
+                        }
+
+                        return;
+                    }
+
+                    self::clearParentLinkWhenNameDiffers($set, $get, $idField, $state);
+                })
+                ->dehydrateStateUsing(function (?string $state, Get $get) use ($idField, $male): ?string {
+                    $memberId = $get($idField);
+
+                    if (blank($memberId)) {
+                        return $state;
+                    }
+
+                    return Member::query()->whereKey($memberId)->where('sex', $male)->value('name') ?? $state;
+                })
+                ->belowContent(function (Get $get, TextInput $component) use ($nameField, $idField, $male): View {
+                    $search = trim((string) $get($nameField));
+                    $linkedName = filled($get($idField))
+                        ? Member::query()->whereKey($get($idField))->value('name')
+                        : null;
+                    $suggestions = filled($linkedName) && trim((string) $linkedName) === $search
+                        ? new Collection
+                        : Member::searchBySexAndName($search, $male, $component->getRecord()?->getKey());
+
+                    return View::make('filament.forms.components.parent-member-suggestions')
+                        ->viewData([
+                            'suggestions' => $suggestions,
+                            'nameField' => $nameField,
+                            'idField' => $idField,
+                        ]);
+                }),
+            Hidden::make($idField)
+                ->rule(function () use ($male): \Closure {
+                    return function (string $attribute, mixed $value, \Closure $fail) use ($male): void {
+                        if (blank($value)) {
+                            return;
+                        }
+
+                        $matchesSex = Member::query()->whereKey($value)->where('sex', $male)->exists();
+
+                        if (! $matchesSex) {
+                            $fail(__('custom.The selected parent is not a member of the expected sex.'));
+                        }
+                    };
+                }),
+        ];
+    }
+
+    protected static function clearParentLinkWhenNameDiffers(Set $set, Get $get, string $idField, ?string $state): void
+    {
+        $memberId = $get($idField);
+
+        if (blank($memberId)) {
+            return;
+        }
+
+        $linkedName = Member::query()->whereKey($memberId)->value('name');
+
+        if (trim((string) $state) !== trim((string) $linkedName)) {
+            $set($idField, null);
+        }
     }
 
     protected static function brazilCountryId(): int

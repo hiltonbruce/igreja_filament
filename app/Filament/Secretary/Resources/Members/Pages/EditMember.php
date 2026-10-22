@@ -2,12 +2,15 @@
 
 namespace App\Filament\Secretary\Resources\Members\Pages;
 
+use App\Filament\Secretary\Resources\Members\Concerns\LinksParentMembers;
 use App\Filament\Secretary\Resources\Members\MemberResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditMember extends EditRecord
 {
+    use LinksParentMembers;
+
     protected static string $resource = MemberResource::class;
 
     protected function getHeaderActions(): array

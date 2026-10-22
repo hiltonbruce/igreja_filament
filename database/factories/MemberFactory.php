@@ -34,4 +34,18 @@ class MemberFactory extends Factory
             'user_id' => User::factory(),
         ];
     }
+
+    public function male(): static
+    {
+        return $this->state([
+            'sex' => true,
+        ]);
+    }
+
+    public function female(): static
+    {
+        return $this->state([
+            'sex' => false,
+        ]);
+    }
 }

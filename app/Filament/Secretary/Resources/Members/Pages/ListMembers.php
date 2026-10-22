@@ -2,6 +2,7 @@
 
 namespace App\Filament\Secretary\Resources\Members\Pages;
 
+use App\Filament\Secretary\Resources\Members\Concerns\LinksParentMembers;
 use App\Filament\Secretary\Resources\Members\MemberResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -9,6 +10,8 @@ use Filament\Support\Enums\Width;
 
 class ListMembers extends ListRecords
 {
+    use LinksParentMembers;
+
     protected static string $resource = MemberResource::class;
 
     protected function getHeaderActions(): array

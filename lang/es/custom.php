@@ -74,6 +74,8 @@ return [
     'Matrimonial Status' => 'Estado civil',
     'Mother Member' => 'Miembro madre',
     'Father Member' => 'Miembro padre',
+    'Click a member to link the parent, otherwise the id is not saved.' => 'Haga clic en el miembro para confirmar el vínculo. Sin esa elección, el id no se guarda.',
+    'The selected parent is not a member of the expected sex.' => 'El miembro elegido no corresponde al sexo esperado para padre o madre.',
     // Countries
     'Country' => 'País',
     'Countries' => 'Países',

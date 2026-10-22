@@ -4,8 +4,11 @@ namespace App\Models;
 
 use App\Enums\SpiritualSituation;
 use Database\Factories\MemberFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -65,6 +68,38 @@ class Member extends Model
             'baptized_in_spirit_date' => 'date',
             'baptized' => 'date',
         ];
+    }
+
+    /**
+     * @return Collection<int, static>
+     */
+    public static function searchBySexAndName(string $search, bool $male, ?int $exceptId = null): Collection
+    {
+        $search = trim($search);
+
+        if (mb_strlen($search) < 2) {
+            return new Collection;
+        }
+
+        $term = '%'.addcslashes(mb_strtolower($search), '%_\\').'%';
+
+        return static::query()
+            ->where('sex', $male)
+            ->when($exceptId, fn (Builder $query): Builder => $query->whereKeyNot($exceptId))
+            ->whereRaw('LOWER(name) LIKE ?', [$term])
+            ->orderBy('name')
+            ->limit(8)
+            ->get();
+    }
+
+    public function father(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'father_member_id');
+    }
+
+    public function mother(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'mother_member_id');
     }
 
     public function memberPhotos(): HasMany
