@@ -21,7 +21,7 @@ O ambiente de produção utiliza **Azure Database for MySQL (Flexible Server)** 
 
 ## Padrões de Código:
 - PHP 8.4+ (use Readonly properties e Types estritos).
-- Laravel 12+.
+- Laravel 13+.
 - Sempre considere que o sistema de arquivos `/home` é lento (SMB); sugira cache em memória (`/tmp` ou Redis) sempre que possível.
 
 # Database Context: Azure MariaDB 10.11

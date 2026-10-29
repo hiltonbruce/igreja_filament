@@ -203,6 +203,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Session Serialization
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the serialization strategy for session data.
+    | Keeping "php" preserves active sessions across the Laravel 13 upgrade.
+    | Switch to "json" only when requiring users to sign in again is acceptable.
+    |
+    */
+
+    'serialization' => env('SESSION_SERIALIZATION', 'php'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Partitioned Cookies
     |--------------------------------------------------------------------------
     |
