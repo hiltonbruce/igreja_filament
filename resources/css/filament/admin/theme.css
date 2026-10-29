@@ -255,6 +255,35 @@
     border-bottom-color: rgba(232, 201, 106, 0.1);
 }
 
+.eliu-panel-switcher {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0.25rem;
+}
+
+@media (max-width: 1023px) {
+    .fi-topbar-end {
+        column-gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        min-width: 0;
+        max-width: 9rem;
+        flex: 1 1 6rem;
+    }
+
+    .fi-topbar .fi-user-menu,
+    .eliu-panel-switcher {
+        flex-shrink: 0;
+    }
+
+    .eliu-panel-switcher .fi-topbar-item-btn {
+        padding-inline: 0.5rem;
+    }
+}
+
 /* Brand */
 .fi-logo,
 .fi-sidebar-header .fi-logo,
