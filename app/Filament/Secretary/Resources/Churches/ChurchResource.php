@@ -6,7 +6,9 @@ use App\Filament\Secretary\Resources\Churches\Pages\CreateChurch;
 use App\Filament\Secretary\Resources\Churches\Pages\EditChurch;
 use App\Filament\Secretary\Resources\Churches\Pages\ListChurches;
 use App\Filament\Secretary\Resources\Churches\Pages\ViewChurch;
+use App\Filament\Secretary\Resources\Churches\RelationManagers\AppointmentsRelationManager;
 use App\Filament\Secretary\Resources\Churches\RelationManagers\CongregationsRelationManager;
+use App\Filament\Secretary\Resources\Churches\RelationManagers\UnitsRelationManager;
 use App\Filament\Secretary\Resources\Churches\Schemas\ChurchForm;
 use App\Filament\Secretary\Resources\Churches\Schemas\ChurchInfolist;
 use App\Filament\Secretary\Resources\Churches\Tables\ChurchesTable;
@@ -74,6 +76,8 @@ class ChurchResource extends Resource
     {
         return [
             CongregationsRelationManager::class,
+            UnitsRelationManager::class,
+            AppointmentsRelationManager::class,
         ];
     }
 

@@ -4,8 +4,10 @@ namespace App\Filament\Secretary\Resources\Members;
 
 use App\Actions\ResolveAddressByZipCode;
 use App\Actions\ResolveForeignLocation;
+use App\Enums\EcclesiasticalRank;
 use App\Enums\LetterType;
 use App\Enums\SpiritualSituation;
+use App\Filament\Secretary\Resources\Churches\RelationManagers\AppointmentsRelationManager;
 use App\Filament\Secretary\Resources\Members\Pages\EditMember;
 use App\Filament\Secretary\Resources\Members\Pages\ListMembers;
 use App\Filament\Secretary\Resources\Members\RelationManagers\MemberPhotosRelationManager;
@@ -442,7 +444,39 @@ class MemberResource extends Resource
                                 ->visible(fn (Get $get) => (bool) $get('baptized_in_spirit') === true),
                             DatePicker::make('baptized')
                                 ->label(__('custom.Baptized Date')),
-                        ]),
+                            TextEntry::make('current_ecclesiastical_rank')
+                                ->label(__('custom.Current ecclesiastical rank'))
+                                ->badge()
+                                ->size('lg')
+                                ->placeholder(__('custom.No consecration'))
+                                ->state(fn (Get $get): ?EcclesiasticalRank => EcclesiasticalRank::highestWithDates([
+                                    'auxiliary_consecrated_at' => $get('auxiliary_consecrated_at'),
+                                    'deacon_consecrated_at' => $get('deacon_consecrated_at'),
+                                    'presbyter_consecrated_at' => $get('presbyter_consecrated_at'),
+                                    'evangelist_consecrated_at' => $get('evangelist_consecrated_at'),
+                                    'pastor_consecrated_at' => $get('pastor_consecrated_at'),
+                                ]))
+                                ->color(fn (?EcclesiasticalRank $state): string => $state?->getColor() ?? 'gray')
+                                ->formatStateUsing(fn (?EcclesiasticalRank $state): ?string => $state?->getLabel())
+                                ->helperText(__('custom.The current rank is the highest consecration with a date set.'))
+                                ->columnSpanFull(),
+                            DatePicker::make('auxiliary_consecrated_at')
+                                ->label(__('custom.Work assistant consecration date'))
+                                ->live(onBlur: true),
+                            DatePicker::make('deacon_consecrated_at')
+                                ->label(__('custom.Deacon consecration date'))
+                                ->live(onBlur: true),
+                            DatePicker::make('presbyter_consecrated_at')
+                                ->label(__('custom.Presbyter consecration date'))
+                                ->live(onBlur: true),
+                            DatePicker::make('evangelist_consecrated_at')
+                                ->label(__('custom.Evangelist consecration date'))
+                                ->live(onBlur: true),
+                            DatePicker::make('pastor_consecrated_at')
+                                ->label(__('custom.Pastor consecration date'))
+                                ->live(onBlur: true),
+                        ])
+                        ->columns(2),
                     Step::make(__('custom.Family'))
                         ->schema([
                             Toggle::make('matrimonial_status')
@@ -663,6 +697,7 @@ class MemberResource extends Resource
     {
         return [
             MemberPhotosRelationManager::class,
+            AppointmentsRelationManager::class,
         ];
     }
 

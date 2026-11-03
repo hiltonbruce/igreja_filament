@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EcclesiasticalRank;
 use App\Enums\SpiritualSituation;
 use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,6 +40,11 @@ class Member extends Model
         'baptized_in_spirit',
         'baptized_in_spirit_date',
         'baptized',
+        'auxiliary_consecrated_at',
+        'deacon_consecrated_at',
+        'presbyter_consecrated_at',
+        'evangelist_consecrated_at',
+        'pastor_consecrated_at',
         'city_id',
         'state_id',
         'country_id',
@@ -67,6 +73,11 @@ class Member extends Model
             'baptized_in_spirit' => 'boolean',
             'baptized_in_spirit_date' => 'date',
             'baptized' => 'date',
+            'auxiliary_consecrated_at' => 'date',
+            'deacon_consecrated_at' => 'date',
+            'presbyter_consecrated_at' => 'date',
+            'evangelist_consecrated_at' => 'date',
+            'pastor_consecrated_at' => 'date',
         ];
     }
 
@@ -132,5 +143,24 @@ class Member extends Model
         return $this->hasMany(Letter::class)
             ->orderByDesc('issued_at')
             ->orderByDesc('id');
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class)
+            ->orderByDesc('is_active')
+            ->orderByDesc('started_at')
+            ->orderByDesc('id');
+    }
+
+    public function currentEcclesiasticalRank(): ?EcclesiasticalRank
+    {
+        return EcclesiasticalRank::highestWithDates([
+            'auxiliary_consecrated_at' => $this->auxiliary_consecrated_at,
+            'deacon_consecrated_at' => $this->deacon_consecrated_at,
+            'presbyter_consecrated_at' => $this->presbyter_consecrated_at,
+            'evangelist_consecrated_at' => $this->evangelist_consecrated_at,
+            'pastor_consecrated_at' => $this->pastor_consecrated_at,
+        ]);
     }
 }

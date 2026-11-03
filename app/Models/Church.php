@@ -101,6 +101,16 @@ class Church extends Model
         return $this->hasMany(Department::class);
     }
 
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
     #[Scope]
     protected function ofLevel(Builder $query, ChurchLevel $level): void
     {
