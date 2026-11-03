@@ -24,6 +24,8 @@ final class EliuTheme
             ->colors([
                 'primary' => Color::hex('#c9a227'),
                 'gray' => Color::hex('#1a3d52'),
+                // Use for Toggle offColor: Filament ignores offColor('gray') on Toggle.
+                'neutral' => Color::Slate,
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,

@@ -74,9 +74,17 @@ class PositionResource extends Resource
                     ->columnSpanFull(),
                 Toggle::make('supports_ordinal')
                     ->label(__('custom.Supports ordinal'))
+                    ->onIcon(Heroicon::Check)
+                    ->offIcon(Heroicon::XMark)
+                    ->onColor('success')
+                    ->offColor('neutral')
                     ->helperText(__('custom.Allows setting 1st, 2nd, 3rd... for this position.')),
                 Toggle::make('is_active')
                     ->label(__('custom.Active'))
+                    ->onIcon(Heroicon::Check)
+                    ->offIcon(Heroicon::XMark)
+                    ->onColor('success')
+                    ->offColor('neutral')
                     ->default(true),
             ])
             ->columns(2);
@@ -98,10 +106,14 @@ class PositionResource extends Resource
                     ->sortable(),
                 IconColumn::make('supports_ordinal')
                     ->label(__('custom.Supports ordinal'))
-                    ->boolean(),
+                    ->boolean()
+                    ->trueIcon(Heroicon::OutlinedCheckCircle)
+                    ->falseIcon(Heroicon::OutlinedXCircle),
                 IconColumn::make('is_active')
                     ->label(__('custom.Active'))
                     ->boolean()
+                    ->trueIcon(Heroicon::OutlinedCheckCircle)
+                    ->falseIcon(Heroicon::OutlinedXCircle)
                     ->sortable(),
                 TextColumn::make('updated_at')
                     ->label(__('custom.Updated at'))

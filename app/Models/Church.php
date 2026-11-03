@@ -96,11 +96,6 @@ class Church extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function departments(): HasMany
-    {
-        return $this->hasMany(Department::class);
-    }
-
     public function units(): HasMany
     {
         return $this->hasMany(Unit::class);
