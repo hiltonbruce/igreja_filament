@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\States\Schemas;
 
+use App\Enums\BrazilRegion;
 use App\Models\Country;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,6 +19,10 @@ class StateForm
                 TextInput::make('abbreviation')
                     ->maxLength(2)
                     ->required(),
+                Select::make('region')
+                    ->label(__('custom.Region'))
+                    ->options(BrazilRegion::class)
+                    ->searchable(),
                 Select::make('country_id')
                     ->options(Country::query()->orderBy('name')->pluck('name', 'id')->toArray())
                     ->searchable()

@@ -29,7 +29,7 @@ class MemberFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'country_id' => Country::query()->create([
                 'name' => fake()->unique()->country().' '.fake()->unique()->numerify('###'),
-                'iso_code' => strtoupper(fake()->unique()->lexify('??')),
+                'iso_code' => 'Z'.strtoupper(fake()->unique()->lexify('?')),
             ])->id,
             'user_id' => User::factory(),
         ];
