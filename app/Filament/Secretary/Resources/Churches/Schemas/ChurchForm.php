@@ -15,7 +15,6 @@ use App\Support\ChurchHierarchy;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -99,6 +98,33 @@ class ChurchForm
                             ->maxLength(255),
                     ])
                     ->columns(2),
+                Section::make(__('custom.Contact'))
+                    ->schema([
+                        TextInput::make('phone')
+                            ->label(__('custom.Phone'))
+                            ->tel()
+                            ->maxLength(255),
+                        TextInput::make('email')
+                            ->label(__('custom.Email'))
+                            ->email()
+                            ->maxLength(255),
+                        TextInput::make('website')
+                            ->label(__('custom.Website'))
+                            ->url()
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
+                    ->footer(function (mixed $livewire): array {
+                        if (! is_object($livewire) || ! method_exists($livewire, 'getFormActionsContentComponent')) {
+                            return [];
+                        }
+
+                        return [
+                            $livewire->getFormActionsContentComponent()
+                                ->sticky(false),
+                        ];
+                    }),
                 Section::make(__('custom.Location'))
                     ->schema([
                         Select::make('country_id')
@@ -320,24 +346,6 @@ class ChurchForm
                             ->maxLength(255),
                     ])
                     ->columns(2),
-                Section::make(__('custom.Contact'))
-                    ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('phone')
-                                ->label(__('custom.Phone'))
-                                ->tel()
-                                ->maxLength(255),
-                            TextInput::make('email')
-                                ->label(__('custom.Email'))
-                                ->email()
-                                ->maxLength(255),
-                            TextInput::make('website')
-                                ->label(__('custom.Website'))
-                                ->url()
-                                ->maxLength(255)
-                                ->columnSpanFull(),
-                        ]),
-                    ]),
             ]);
     }
 

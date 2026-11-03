@@ -3,6 +3,7 @@
 namespace App\Filament\Secretary\Resources\Churches\Pages;
 
 use App\Filament\Secretary\Resources\Churches\ChurchResource;
+use App\Filament\Secretary\Resources\Churches\Pages\Concerns\PlacesFormActionsBelowContact;
 use App\Models\Church;
 use App\Support\ChurchHierarchy;
 use Filament\Actions\DeleteAction;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class EditChurch extends EditRecord
 {
+    use PlacesFormActionsBelowContact;
+
     protected static string $resource = ChurchResource::class;
 
     protected function getHeaderActions(): array
