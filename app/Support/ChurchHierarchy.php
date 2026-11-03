@@ -117,8 +117,8 @@ class ChurchHierarchy
             'postal_code' => ['nullable', 'string', 'max:10'],
             'area_code' => ['nullable', 'string', 'max:5'],
             'timezone' => ['nullable', 'string', 'max:255'],
-            'latitude' => ['nullable', 'string', 'max:10'],
-            'longitude' => ['nullable', 'string', 'max:10'],
+            'latitude' => ['nullable', 'string', 'max:20'],
+            'longitude' => ['nullable', 'string', 'max:20'],
             'sector' => ['nullable', 'integer'],
             'country_id' => [
                 Rule::requiredIf(fn (): bool => $level?->requiresCountry() ?? false),

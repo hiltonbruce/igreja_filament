@@ -9,11 +9,14 @@ use App\Filament\Secretary\Resources\Churches\Pages\CreateChurch;
 use App\Models\Church;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Neighborhood;
 use App\Models\State;
+use App\Models\Street;
 use App\Models\User;
 use App\Support\ChurchHierarchy;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -216,12 +219,12 @@ class ChurchHierarchyTest extends TestCase
                 'name' => 'Igreja de Lisboa',
                 'level' => ChurchLevel::Municipal->value,
                 'country_id' => $portugal->id,
-                'timezone' => 'Europe/Lisbon',
             ])
             ->fillForm([
                 'state_id' => $stateId,
                 'city_id' => $cityId,
             ])
+            ->assertFormFieldDisabled('timezone')
             ->call('create')
             ->assertHasNoFormErrors();
 
@@ -252,7 +255,6 @@ class ChurchHierarchyTest extends TestCase
                 'name' => 'Sede Municipal Teste',
                 'level' => ChurchLevel::Municipal->value,
                 'country_id' => $brazil->id,
-                'timezone' => 'America/Sao_Paulo',
             ])
             ->fillForm([
                 'brazil_state_id' => $state->id,
@@ -260,6 +262,7 @@ class ChurchHierarchyTest extends TestCase
                 'state_id' => $state->id,
                 'city_id' => $city->id,
             ])
+            ->assertFormFieldDisabled('timezone')
             ->call('create')
             ->assertHasNoFormErrors();
 
@@ -270,6 +273,81 @@ class ChurchHierarchyTest extends TestCase
             'state_id' => $state->id,
             'country_id' => $brazil->id,
         ]);
+    }
+
+    public function test_the_secretary_form_resolves_brazil_address_from_postal_code(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Filament::setCurrentPanel(Filament::getPanel('secretary'));
+
+        Country::query()->create(['name' => 'Brasil', 'iso_code' => 'BR']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://brasilapi.com.br/api/cep/v2/*' => Http::response([
+                'cep' => '89010025',
+                'state' => 'SC',
+                'city' => 'Blumenau',
+                'neighborhood' => 'Centro',
+                'street' => 'Rua Doutor Luiz de Freitas Melro',
+                'location' => [
+                    'type' => 'Point',
+                    'coordinates' => [
+                        'longitude' => '-49.0629788',
+                        'latitude' => '-26.9244749',
+                    ],
+                ],
+            ]),
+            'https://brasilapi.com.br/api/ibge/uf/v1/SC' => Http::response([
+                'id' => 42,
+                'sigla' => 'SC',
+                'nome' => 'Santa Catarina',
+            ]),
+        ]);
+
+        Livewire::test(CreateChurch::class)
+            ->fillForm([
+                'name' => 'Sede Municipal Blumenau',
+                'level' => ChurchLevel::Municipal->value,
+                'country_id' => ChurchHierarchy::brazilCountryId(),
+            ])
+            ->assertFormFieldDisabled('timezone')
+            ->set('data.postal_code', '89010-025')
+            ->assertSchemaStateSet(function (array $state): array {
+                $this->assertSame('89010025', $state['postal_code']);
+                $this->assertSame('Rua Doutor Luiz de Freitas Melro', $state['address']);
+                $this->assertSame('-26.9244749', $state['latitude']);
+                $this->assertSame('-49.0629788', $state['longitude']);
+                $this->assertSame('America/Sao_Paulo', $state['timezone']);
+                $this->assertNotNull($state['state_id']);
+                $this->assertNotNull($state['city_id']);
+                $this->assertNotNull($state['neighborhood_id']);
+                $this->assertEquals($state['state_id'], $state['brazil_state_id']);
+                $this->assertEquals($state['city_id'], $state['brazil_city_id']);
+
+                return [];
+            })
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $street = Street::query()->where('zip_code', '89010025')->first();
+        $neighborhood = Neighborhood::query()->where('name', 'Centro')->first();
+        $city = City::query()->where('name', 'Blumenau')->first();
+        $state = State::query()->where('abbreviation', 'SC')->first();
+        $church = Church::query()->where('name', 'Sede Municipal Blumenau')->first();
+
+        $this->assertNotNull($street);
+        $this->assertNotNull($neighborhood);
+        $this->assertNotNull($city);
+        $this->assertNotNull($state);
+        $this->assertNotNull($church);
+        $this->assertSame($state->id, $church->state_id);
+        $this->assertSame($city->id, $church->city_id);
+        $this->assertSame($neighborhood->id, $church->neighborhood_id);
+        $this->assertSame('89010025', $church->postal_code);
+        $this->assertSame('Rua Doutor Luiz de Freitas Melro', $church->address);
+        $this->assertSame('-26.9244749', $church->latitude);
+        $this->assertSame('-49.0629788', $church->longitude);
     }
 
     public function test_states_receive_brazil_region_from_abbreviation_mapping(): void

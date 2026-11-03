@@ -2,6 +2,7 @@
 
 namespace App\Filament\Secretary\Resources\Churches\Schemas;
 
+use App\Actions\ResolveAddressByZipCode;
 use App\Actions\ResolveForeignLocation;
 use App\Enums\BrazilRegion;
 use App\Enums\ChurchLevel;
@@ -108,6 +109,7 @@ class ChurchForm
                             ->required(fn (Get $get): bool => self::level($get('level'))?->requiresCountry() ?? false)
                             ->live()
                             ->afterStateUpdated(function (Set $set): void {
+                                $set('postal_code', null);
                                 $set('state_id', null);
                                 $set('city_id', null);
                                 $set('brazil_state_id', null);
@@ -115,10 +117,47 @@ class ChurchForm
                                 $set('neighborhood_id', null);
                                 $set('foreign_state', null);
                                 $set('foreign_city', null);
+                                $set('address', null);
+                                $set('latitude', null);
+                                $set('longitude', null);
+                                $set('timezone', 'America/Sao_Paulo');
                                 $set('region', null);
+                            }),
+                        TextInput::make('postal_code')
+                            ->label(__('custom.Zip Code'))
+                            ->maxLength(10)
+                            ->helperText(fn (Get $get): ?string => ChurchHierarchy::isBrazil($get('country_id'))
+                                ? __('custom.Fill in the ZIP code to load the address automatically')
+                                : null)
+                            ->visible(fn (Get $get): bool => ChurchHierarchy::isBrazil($get('country_id')) || blank($get('country_id')))
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                                if (! ChurchHierarchy::isBrazil($get('country_id'))) {
+                                    return;
+                                }
+
+                                $resolved = app(ResolveAddressByZipCode::class)->handle($state);
+
+                                if ($resolved === null) {
+                                    return;
+                                }
+
+                                $set('postal_code', $resolved['zip_code']);
+                                $set('country_id', $resolved['country_id']);
+                                $set('state_id', $resolved['state_id']);
+                                $set('city_id', $resolved['city_id']);
+                                $set('brazil_state_id', $resolved['state_id']);
+                                $set('brazil_city_id', $resolved['city_id']);
+                                $set('neighborhood_id', $resolved['neighborhood_id']);
+                                $set('address', $resolved['address']);
+                                $set('latitude', $resolved['latitude']);
+                                $set('longitude', $resolved['longitude']);
+                                self::syncTimezoneFromCity($set, $resolved['city_id']);
                             }),
                         Hidden::make('state_id'),
                         Hidden::make('city_id'),
+                        Hidden::make('latitude'),
+                        Hidden::make('longitude'),
                         Select::make('brazil_state_id')
                             ->label(__('custom.State'))
                             ->options(function (Get $get): array {
@@ -208,6 +247,7 @@ class ChurchForm
                             ->afterStateUpdated(function (?string $state, Set $set): void {
                                 $set('city_id', $state);
                                 $set('neighborhood_id', null);
+                                self::syncTimezoneFromCity($set, $state);
                             }),
                         Select::make('neighborhood_id')
                             ->label(__('custom.Neighborhood'))
@@ -256,20 +296,18 @@ class ChurchForm
                             })
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
-                                $set('city_id', app(ResolveForeignLocation::class)->resolveCity(
+                                $cityId = app(ResolveForeignLocation::class)->resolveCity(
                                     (int) $get('country_id'),
                                     $get('state_id') ? (int) $get('state_id') : null,
                                     $state,
-                                ));
+                                );
+                                $set('city_id', $cityId);
+                                self::syncTimezoneFromCity($set, $cityId);
                             }),
                         TextInput::make('address')
                             ->label(__('custom.Address'))
                             ->maxLength(255)
                             ->columnSpanFull(),
-                        TextInput::make('postal_code')
-                            ->label(__('custom.Zip Code'))
-                            ->maxLength(10)
-                            ->visible(fn (Get $get): bool => ChurchHierarchy::isBrazil($get('country_id')) || blank($get('country_id'))),
                         TextInput::make('area_code')
                             ->label(__('custom.Area Code'))
                             ->maxLength(5)
@@ -277,6 +315,8 @@ class ChurchForm
                         TextInput::make('timezone')
                             ->label(__('custom.Timezone'))
                             ->default('America/Sao_Paulo')
+                            ->disabled()
+                            ->saved()
                             ->maxLength(255),
                     ])
                     ->columns(2),
@@ -312,6 +352,19 @@ class ChurchForm
         }
 
         return null;
+    }
+
+    protected static function syncTimezoneFromCity(Set $set, int|string|null $cityId): void
+    {
+        if ($cityId === null || $cityId === '') {
+            $set('timezone', 'America/Sao_Paulo');
+
+            return;
+        }
+
+        $timezone = City::query()->find($cityId)?->timezone;
+
+        $set('timezone', filled($timezone) ? $timezone : 'America/Sao_Paulo');
     }
 
     /**
